@@ -38,7 +38,7 @@ export default function ProjectSettingsLoading() {
 
       {/* Stats card */}
       <div className="p-4">
-        <div className="bg-card w-full rounded-2xl flex flex-col divide-y divide-border px-4">
+        <div className="bg-card border border-border w-full rounded-2xl flex flex-col divide-y divide-border px-4">
           {[0, 1, 2].map((i) => (
             <div
               key={i}

@@ -136,7 +136,7 @@ function ProjectTabs({
       <div className="flex flex-row gap-2">
         <Button
           size="icon"
-          className="rounded-full bg-neutral-200 hover:bg-neutral-300 text-foreground"
+          className="rounded-full bg-neutral-200 hover:bg-brand-subtle-hover text-foreground"
           onClick={onEnterSelection}
         >
           <IconSquareCheck />

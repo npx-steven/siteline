@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Organize job site photos and documents by job.",
     start_url: "/",
     display: "standalone",
-    background_color: "#F8F7F4",
-    theme_color: "#F8F7F4",
+    background_color: "#FFFFFF",
+    theme_color: "#FFFFFF",
     orientation: "portrait",
     icons: [
       {

@@ -144,7 +144,7 @@ function PhotoSelectionFooter({
                 </div>
               </div>
               <div>
-                <IconChevronRight size={16} stroke={1.5} />
+                <IconChevronRight size={16} stroke={1.5} className="text-brand-tertiary" />
               </div>
             </button>
             <button
@@ -168,7 +168,7 @@ function PhotoSelectionFooter({
                 </div>
               </div>
               <div>
-                <IconChevronRight size={16} stroke={1.5} />
+                <IconChevronRight size={16} stroke={1.5} className="text-brand-tertiary" />
               </div>
             </button>
           </div>

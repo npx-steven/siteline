@@ -17,8 +17,8 @@ function EmptyState({ icon, title, subtext }: EmptyStateProps) {
   return (
     <Empty className="h-full ">
       <EmptyHeader className="gap-0.5">
-        <EmptyMedia className="bg-white p-4 rounded-xl border border-forground">
-          <Icon size={32} stroke={1.5} className="text-forground " />
+        <EmptyMedia className="bg-white p-4 rounded-xl border border-border">
+          <Icon size={32} stroke={1.5} className="text-brand-tertiary" />
         </EmptyMedia>
         <EmptyTitle className="text-lg font-semibold text-foreground">
           {title}

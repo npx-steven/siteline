@@ -61,7 +61,7 @@ function PhotoInfoPanel({
     <section
       id={id}
       aria-label="Photo info"
-      className="mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[min(60dvh,34rem)] overflow-y-auto overscroll-contain rounded-3xl bg-[#1c1c1e] px-4 sm:mx-auto sm:w-full sm:max-w-md"
+      className="mx-3 mb-[max(0.75rem,env(safe-area-inset-bottom))] max-h-[min(60dvh,34rem)] overflow-y-auto overscroll-contain rounded-3xl bg-neutral-900 px-4 sm:mx-auto sm:w-full sm:max-w-md"
     >
       {editingNote && onSaveNote ? (
         <NoteEditor
@@ -73,7 +73,7 @@ function PhotoInfoPanel({
         <div className="divide-y divide-white/10">
           <InfoRow
             icon={
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-medium text-[#1c1c1e]">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white text-sm font-medium text-foreground">
                 {userInitials(photo.uploaded_by_name)}
               </div>
             }
@@ -218,7 +218,7 @@ function LocationRow({
       href={mapsUrl(location)}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-semibold text-[#1c1c1e] transition-colors active:bg-white/80"
+      className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 text-sm font-semibold text-foreground transition-colors active:bg-white/80"
     >
       <IconMap2 size={18} stroke={1.75} />
       Open in Maps
@@ -332,7 +332,7 @@ function NoteEditor({
           type="button"
           onClick={handleSave}
           disabled={saving || unchanged}
-          className="flex h-11 flex-1 items-center justify-center rounded-full bg-white text-sm font-semibold text-[#1c1c1e] transition-colors active:bg-white/80 disabled:opacity-50"
+          className="flex h-11 flex-1 items-center justify-center rounded-full bg-white text-sm font-semibold text-foreground transition-colors active:bg-white/80 disabled:opacity-50"
         >
           {saving ? <Spinner className="size-5" /> : "Save note"}
         </button>

@@ -52,7 +52,7 @@ function PhotoViewerTopBar({
         className={cn(
           "flex size-11 shrink-0 items-center justify-center rounded-full transition-colors",
           panelOpen
-            ? "bg-white text-[#1c1c1e]"
+            ? "bg-white text-foreground"
             : "bg-white/15 text-white active:bg-white/25 [@media(hover:hover)]:hover:bg-white/25",
         )}
       >

@@ -103,7 +103,7 @@ export function ProjectCard({
         {starred ? (
           <IconStarFilled size={18} className="text-amber-400" />
         ) : (
-          <IconStar size={18} className="text-[#1C1C1E]" />
+          <IconStar size={18} className="text-foreground" />
         )}
       </button>
 

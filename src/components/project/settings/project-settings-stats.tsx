@@ -24,7 +24,7 @@ function ProjectSettingsStats({
 
   return (
     <div className="p-4 ">
-      <div className="bg-card w-full rounded-2xl flex flex-col divide-y divide-border px-4">
+      <div className="bg-card border border-border w-full rounded-2xl flex flex-col divide-y divide-border px-4">
         {stats.map(({ icon: Icon, label, stat }) => (
           <div
             key={label}

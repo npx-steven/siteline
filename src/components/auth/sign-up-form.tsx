@@ -183,7 +183,7 @@ function SignUpForm({ token }: SignUpFormProps) {
           )}
         />
         {pwd.length > 0 && (
-          <div className="rounded-xl bg-card p-4">
+          <div className="rounded-xl border border-border bg-card p-4">
             <ul className="space-y-2 text-xs">
               {rules.map((r) => (
                 <li
