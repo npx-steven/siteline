@@ -7,6 +7,7 @@ import {
   photoTakenAt,
   userInitials,
 } from "@/lib/helpers";
+import { useLongPress } from "@/lib/use-long-press";
 import { cn } from "@/lib/utils";
 import { ViewerPhoto } from "@/types/db";
 import { IconCheck } from "@tabler/icons-react";
@@ -18,6 +19,8 @@ type PhotoGridProps = {
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onOpen: (id: string) => void;
+  // Hold on a tile: enter selection mode with that photo selected.
+  onLongPress: (id: string) => void;
 };
 
 function PhotoGrid({
@@ -26,8 +29,10 @@ function PhotoGrid({
   selectedIds,
   onToggleSelect,
   onOpen,
+  onLongPress,
 }: PhotoGridProps) {
   const groups = groupPhotosByDate(photos ?? []);
+  const bindLongPress = useLongPress(onLongPress);
 
   return (
     <div className="">
@@ -49,6 +54,7 @@ function PhotoGrid({
                   <button
                     type="button"
                     key={photo.id}
+                    {...bindLongPress(photo.id)}
                     onClick={() =>
                       selectionMode ? onToggleSelect(photo.id) : onOpen(photo.id)
                     }
@@ -59,7 +65,8 @@ function PhotoGrid({
                     }
                     aria-pressed={selectionMode ? isSelected : undefined}
                     className={cn(
-                      "relative aspect-square rounded-md overflow-hidden cursor-pointer",
+                      // No iOS image callout or text selection fighting the hold.
+                      "relative aspect-square rounded-md overflow-hidden cursor-pointer select-none [-webkit-touch-callout:none]",
                       isSelected && "ring-2 ring-blue-600",
                     )}
                   >
@@ -68,6 +75,7 @@ function PhotoGrid({
                       alt={`Photo uploaded by ${photo.uploaded_by_name ?? "unknown"}`}
                       fill
                       sizes="25vw"
+                      draggable={false}
                       className="object-cover"
                     />
                     <div className="absolute bottom-2 left-2 flex items-center justify-center size-6 rounded-full bg-white text-foreground text-xs font-normal shadow-sm">

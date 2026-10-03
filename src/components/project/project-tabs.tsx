@@ -94,6 +94,14 @@ function ProjectTabs({
     );
   };
 
+  // Holding a photo starts selection mode with it selected. Already selecting,
+  // a hold acts like a tap — the long press swallows the release's click, so
+  // it has to toggle here or it would do nothing.
+  const handlePhotoLongPress = (id: string) => {
+    if (!selectionMode) onEnterSelection();
+    onToggleSelect(id);
+  };
+
   const allSelected =
     (activeItems?.length ?? 0) > 0 &&
     activeItems!.every((item) => selectedIds.has(item.id));
@@ -189,6 +197,7 @@ function ProjectTabs({
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
               onOpen={onOpenPhoto}
+              onLongPress={handlePhotoLongPress}
             />
           ) : (
             <div className="flex flex-col items-center justify-center">
