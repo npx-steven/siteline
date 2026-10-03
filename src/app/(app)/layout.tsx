@@ -13,6 +13,7 @@ import {
   getAllProjectsAction,
 } from "@/actions/location";
 import { uploadMediaAction } from "@/actions/upload";
+import { readPhotoMetadata } from "@/lib/photo-metadata";
 import type { Coordinates } from "@/types/location";
 import {
   NavVisibilityProvider,
@@ -57,7 +58,13 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
     coords: Coordinates | null,
   ): Promise<boolean> => {
     const toastId = toast.loading("Saving photo…");
-    const { error } = await uploadMediaAction(file, "photos", projectId, coords);
+    // The FAB always captures fresh, so the GPS fix taken at button press
+    // describes the photo when its own EXIF has none.
+    const meta = await readPhotoMetadata(file, {
+      origin: "camera",
+      getDeviceLocation: async () => coords,
+    });
+    const { error } = await uploadMediaAction(file, "photos", projectId, meta);
 
     if (error) {
       toast.error("Photo upload failed", { id: toastId, description: error });

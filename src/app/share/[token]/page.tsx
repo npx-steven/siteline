@@ -1,5 +1,6 @@
 import SharePageClient from "@/components/share/share-page-client";
 import { SHARE_LINK_TTL_DAYS } from "@/lib/helpers";
+import { parsePostgisPoint, toViewerPhoto } from "@/lib/photos";
 import { createServiceClient } from "@/lib/supabase/server";
 import { SharedPhoto } from "@/types/db";
 import { IconClockOff } from "@tabler/icons-react";
@@ -47,7 +48,7 @@ async function SharePage({ params }: SharePageProps) {
   // Project header info + the owning company name (FK embed, aliased for readability).
   const { data: project } = await supabase
     .from("projects")
-    .select("name, address, company:companies(name)")
+    .select("name, address, location, company:companies(name)")
     .eq("id", shareLink.project_id)
     .single();
 
@@ -58,7 +59,9 @@ async function SharePage({ params }: SharePageProps) {
   // Fetch photos THROUGH the join, scoped to this link — never by project_id.
   const { data: grantedPhotoRows, error: grantedPhotosError } = await supabase
     .from("share_link_photos")
-    .select("photos(id, storage_path, created_at)")
+    .select(
+      "photos(id, storage_path, created_at, captured_at, uploaded_by_name, location, location_source, size_bytes, width, height, note)",
+    )
     .eq("share_link_id", shareLink.id);
 
   if (grantedPhotosError) {
@@ -75,7 +78,7 @@ async function SharePage({ params }: SharePageProps) {
     const {
       data: { publicUrl },
     } = supabase.storage.from("photos").getPublicUrl(photo.storage_path);
-    return { id: photo.id, created_at: photo.created_at, url: publicUrl };
+    return toViewerPhoto(photo, publicUrl);
   });
 
   const company = Array.isArray(project.company)
@@ -87,6 +90,7 @@ async function SharePage({ params }: SharePageProps) {
       companyName={company?.name ?? "Siteline"}
       projectName={project.name}
       projectAddress={project.address}
+      siteLocation={parsePostgisPoint(project.location)}
       viewType={shareLink.view_type}
       sharedPhotos={sharedPhotos}
       token={token}

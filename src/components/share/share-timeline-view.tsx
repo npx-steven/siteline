@@ -3,8 +3,10 @@ import SharePhotoCard from "./share-photo-card";
 
 function ShareTimelineView({
   groups,
+  onOpen,
 }: {
   groups: Record<string, SharedPhoto[]>;
+  onOpen: (id: string) => void;
 }) {
   return (
     <div className="px-4 py-6">
@@ -23,14 +25,14 @@ function ShareTimelineView({
                 <h2 className="text-lg font-bold">{label}</h2>
               </div>
               <span className="text-sm text-muted-foreground">
-                {photos.length} photos
+                {photos.length} photo{photos.length === 1 ? "" : "s"}
               </span>
             </div>
 
             {/* photo grid */}
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {photos.map((photo) => (
-                <SharePhotoCard key={photo.id} photo={photo} />
+                <SharePhotoCard key={photo.id} photo={photo} onOpen={onOpen} />
               ))}
             </div>
           </section>

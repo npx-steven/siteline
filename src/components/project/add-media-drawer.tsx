@@ -8,7 +8,11 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { checkUploadSize, getCurrentPosition } from "@/lib/helpers";
-import { Coordinates } from "@/types/location";
+import {
+  PhotoOrigin,
+  PhotoUploadMeta,
+  readPhotoMetadata,
+} from "@/lib/photo-metadata";
 import { toast } from "sonner";
 
 import {
@@ -41,7 +45,7 @@ function AddMediaDrawer({
   const router = useRouter();
 
   const handleFileChange =
-    (bucket: "photos" | "documents") =>
+    (bucket: "photos" | "documents", origin: PhotoOrigin = "library") =>
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       // Clear the input so re-picking the same file still fires onChange.
@@ -59,23 +63,18 @@ function AddMediaDrawer({
       setIsUploading(true);
       const toastId = toast.loading(`Uploading ${label.toLowerCase()}…`);
 
-      let location: Coordinates | null = null;
+      // Device GPS only stands in for a fresh camera capture. A camera-roll
+      // pick without EXIF GPS uploads with no location rather than wherever
+      // the phone happens to be now.
+      const meta: PhotoUploadMeta | null =
+        bucket === "photos"
+          ? await readPhotoMetadata(file, {
+              origin,
+              getDeviceLocation: () => getCurrentPosition().catch(() => null),
+            })
+          : null;
 
-      if (bucket === "photos") {
-        try {
-          location = await getCurrentPosition();
-        } catch {
-          // Permission denied, timeout, or unsupported — upload without GPS.
-          location = null;
-        }
-      }
-
-      const { error } = await uploadMediaAction(
-        file,
-        bucket,
-        projectId,
-        location,
-      );
+      const { error } = await uploadMediaAction(file, bucket, projectId, meta);
 
       setIsUploading(false);
 
@@ -151,7 +150,7 @@ function AddMediaDrawer({
                   capture="environment"
                   className="hidden"
                   disabled={isUploading}
-                  onChange={handleFileChange("photos")}
+                  onChange={handleFileChange("photos", "camera")}
                 />
               </label>
             </>

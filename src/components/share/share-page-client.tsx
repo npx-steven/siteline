@@ -7,11 +7,16 @@ import { useMemo, useState } from "react";
 import ShareViewToggle from "./share-view-toggle";
 import ShareGalleryView from "./share-gallery-view";
 import ShareTimelineView from "./share-timeline-view";
+import PhotoViewer from "@/components/photo-viewer/photo-viewer";
+import { usePhotoParam } from "@/components/photo-viewer/use-photo-param";
+import { orderPhotosForViewer } from "@/lib/photos";
+import { Coordinates } from "@/types/location";
 
 type SharePageClientProps = {
   companyName: string;
   projectName: string;
   projectAddress: string;
+  siteLocation: Coordinates | null;
   viewType: ShareViewType;
   sharedPhotos: SharedPhoto[];
   token: string;
@@ -21,10 +26,16 @@ function SharePageClient({
   companyName,
   projectName,
   projectAddress,
+  siteLocation,
   viewType,
   sharedPhotos,
   token,
 }: SharePageClientProps) {
+  const photoViewer = usePhotoParam();
+  const viewerPhotos = useMemo(
+    () => orderPhotosForViewer(sharedPhotos),
+    [sharedPhotos],
+  );
   const dateRange = useMemo(() => getDateRange(sharedPhotos), [sharedPhotos]);
   const [viewMode, setViewMode] = useState<ShareViewType>(viewType);
 
@@ -47,11 +58,19 @@ function SharePageClient({
       </div>
       <div>
         {viewMode === "gallery" ? (
-          <ShareGalleryView groups={groupPhotos} />
+          <ShareGalleryView groups={groupPhotos} onOpen={photoViewer.open} />
         ) : (
-          <ShareTimelineView groups={groupPhotos} />
+          <ShareTimelineView groups={groupPhotos} onOpen={photoViewer.open} />
         )}
       </div>
+      {/* Read-only: no onSaveNote, so the note shows only when one exists. */}
+      <PhotoViewer
+        photos={viewerPhotos}
+        openId={photoViewer.openId}
+        site={siteLocation}
+        onShow={photoViewer.show}
+        onClose={photoViewer.close}
+      />
     </div>
   );
 }

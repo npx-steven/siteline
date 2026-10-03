@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthUser } from "./auth";
+import { PHOTO_NOTE_MAX_LENGTH } from "@/lib/helpers";
 
 type Bucket = "photos" | "documents";
 
@@ -127,4 +128,40 @@ export async function getMediaDownloadsAction(
   });
 
   return { error: null, files };
+}
+
+export async function updatePhotoNoteAction(
+  projectId: string,
+  photoId: string,
+  note: string,
+): Promise<{ error: string | null }> {
+  const trimmed = note.trim();
+  if (trimmed.length > PHOTO_NOTE_MAX_LENGTH) {
+    return {
+      error: `Notes are limited to ${PHOTO_NOTE_MAX_LENGTH} characters.`,
+    };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const user = await getAuthUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // As with delete, an RLS-blocked UPDATE changes zero rows without raising,
+  // so the returned rows are the only reliable signal it landed.
+  const { data: updated, error } = await supabase
+    .from("photos")
+    .update({ note: trimmed || null })
+    .eq("project_id", projectId)
+    .eq("id", photoId)
+    .select("id");
+
+  if (error) return { error: `Could not save note: ${error.message}` };
+  if (!updated || updated.length === 0) {
+    return { error: "You don't have permission to edit this photo." };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  return { error: null };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Document, Photo } from "@/types/db";
+import { Document, ViewerPhoto } from "@/types/db";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -28,7 +28,7 @@ import { toast } from "sonner";
 
 type ProjectTabsProps = {
   projectId: string;
-  photos: Photo[] | null;
+  photos: ViewerPhoto[] | null;
   documents: Document[] | null;
   selectionMode: boolean;
   selectedIds: Set<string>;
@@ -37,6 +37,7 @@ type ProjectTabsProps = {
   onToggleSelect: (id: string) => void;
   onSelectAll: (ids: string[]) => void;
   onShareClick: () => void;
+  onOpenPhoto: (id: string) => void;
 };
 
 function ProjectTabs({
@@ -50,6 +51,7 @@ function ProjectTabs({
   onToggleSelect,
   onSelectAll,
   onShareClick,
+  onOpenPhoto,
 }: ProjectTabsProps) {
   const [activeTab, setActiveTab] = useState<"photos" | "documents">("photos");
   const [addDrawerOpen, setAddDrawerOpen] = useState(false);
@@ -186,6 +188,7 @@ function ProjectTabs({
               selectionMode={selectionMode}
               selectedIds={selectedIds}
               onToggleSelect={onToggleSelect}
+              onOpen={onOpenPhoto}
             />
           ) : (
             <div className="flex flex-col items-center justify-center">

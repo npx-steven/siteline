@@ -3,12 +3,13 @@
 import { cookies } from "next/headers";
 import { getAuthUser } from "./auth";
 import { createClient } from "@/lib/supabase/server";
+import type { PhotoUploadMeta } from "@/lib/photo-metadata";
 
 export async function uploadMediaAction(
   file: File,
   bucket: "photos" | "documents",
   projectId: string,
-  location: { lat: number; lng: number } | null = null,
+  meta: PhotoUploadMeta | null = null,
 ): Promise<{ error: string | null }> {
   const cookieStore = await cookies();
   const supabase = await createClient(cookieStore);
@@ -60,6 +61,8 @@ export async function uploadMediaAction(
     return { error: `Storage: ${storageError.message}` };
   }
 
+  const photoMeta = bucket === "photos" ? sanitizePhotoMeta(meta) : null;
+
   // Insert file into table row
   const { error: tableError } = await supabase.from(bucket).insert({
     id: fileId,
@@ -68,8 +71,15 @@ export async function uploadMediaAction(
     uploaded_by_name: profile.full_name,
     storage_path: storageData.path,
     size_bytes: file.size,
-    ...(bucket === "photos" &&
-      location && { location: `POINT(${location.lng} ${location.lat})` }),
+    ...(photoMeta && {
+      captured_at: photoMeta.capturedAt,
+      width: photoMeta.width,
+      height: photoMeta.height,
+      ...(photoMeta.location && {
+        location: `POINT(${photoMeta.location.lng} ${photoMeta.location.lat})`,
+        location_source: photoMeta.locationSource,
+      }),
+    }),
     ...(bucket === "documents" && { name: file.name }),
   });
   if (tableError) {
@@ -87,4 +97,52 @@ export async function uploadMediaAction(
   }
 
   return { error: null };
+}
+
+// The metadata is read on the device and arrives from the client, so treat it
+// as untrusted: drop anything malformed rather than failing the upload over it.
+function sanitizePhotoMeta(meta: PhotoUploadMeta | null): PhotoUploadMeta {
+  const empty: PhotoUploadMeta = {
+    capturedAt: null,
+    width: null,
+    height: null,
+    location: null,
+    locationSource: null,
+  };
+  if (!meta) return empty;
+
+  const taken = meta.capturedAt ? new Date(meta.capturedAt) : null;
+  // A day of slack for device clock and time zone skew; nothing pre-2000.
+  const capturedAt =
+    taken &&
+    !Number.isNaN(taken.getTime()) &&
+    taken.getTime() <= Date.now() + 24 * 60 * 60 * 1000 &&
+    taken.getUTCFullYear() >= 2000
+      ? taken.toISOString()
+      : null;
+
+  const dimension = (n: unknown) =>
+    typeof n === "number" && Number.isInteger(n) && n > 0 && n <= 100_000
+      ? n
+      : null;
+  const width = dimension(meta.width);
+  const height = dimension(meta.height);
+
+  const loc = meta.location;
+  const validLocation =
+    loc &&
+    Number.isFinite(loc.lat) &&
+    Number.isFinite(loc.lng) &&
+    Math.abs(loc.lat) <= 90 &&
+    Math.abs(loc.lng) <= 180;
+  const validSource =
+    meta.locationSource === "exif" || meta.locationSource === "device";
+
+  return {
+    capturedAt,
+    width: width && height ? width : null,
+    height: width && height ? height : null,
+    location: validLocation && validSource ? { lat: loc.lat, lng: loc.lng } : null,
+    locationSource: validLocation && validSource ? meta.locationSource : null,
+  };
 }

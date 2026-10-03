@@ -5,9 +5,10 @@ import SharePhotoCard from "./share-photo-card";
 
 type ShareGalleryViewProps = {
   groups: Record<string, SharedPhoto[]>;
+  onOpen: (id: string) => void;
 };
 
-function ShareGalleryView({ groups }: ShareGalleryViewProps) {
+function ShareGalleryView({ groups, onOpen }: ShareGalleryViewProps) {
   return (
     <div className="flex flex-col gap-8 px-4 py-6">
       {Object.entries(groups).map(([label, photos]) => (
@@ -24,7 +25,7 @@ function ShareGalleryView({ groups }: ShareGalleryViewProps) {
           {/* photo grid */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {photos.map((photo) => (
-              <SharePhotoCard key={photo.id} photo={photo} />
+              <SharePhotoCard key={photo.id} photo={photo} onOpen={onOpen} />
             ))}
           </div>
         </section>

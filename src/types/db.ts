@@ -19,15 +19,42 @@ export type Company = {
   license_number: string | null;
 };
 
+export type LocationSource = "exif" | "device";
+
 export type Photo = {
   id: string;
   project_id: string;
   uploaded_by: string;
-  uploaded_by_name: string;
+  uploaded_by_name: string | null;
   storage_path: string;
-  location: { lat: number; lng: number } | null;
+  // PostGIS geography exactly as PostgREST returns it: hex EWKB
+  // ("0101000020E6…"), not an object. Decode with parsePostgisPoint.
+  location: string | null;
+  location_source: LocationSource | null;
+  // When the photo was taken (EXIF). NULL for older rows and files without it.
+  captured_at: string | null;
+  width: number | null;
+  height: number | null;
+  note: string | null;
   size_bytes: number | null;
   created_at: string;
+};
+
+// What both photo surfaces — the project page and the client share page —
+// hand the grid and the viewer. URL and coordinates are resolved on the
+// server, so client components never need a Supabase client.
+export type ViewerPhoto = {
+  id: string;
+  url: string;
+  created_at: string;
+  captured_at: string | null;
+  uploaded_by_name: string | null;
+  location: { lat: number; lng: number } | null;
+  location_source: LocationSource | null;
+  size_bytes: number | null;
+  width: number | null;
+  height: number | null;
+  note: string | null;
 };
 
 export type Document = {
@@ -74,11 +101,7 @@ export type ShareLink = {
   view_type: ShareViewType;
 };
 
-export type SharedPhoto = {
-  id: string;
-  created_at: string;
-  url: string;
-};
+export type SharedPhoto = ViewerPhoto;
 
 export type ShareLinkPhoto = {
   share_link_id: string;

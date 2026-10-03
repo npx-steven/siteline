@@ -1,17 +1,23 @@
 "use client";
 
-import { formatDate, groupPhotosByDate, userInitials } from "@/lib/helpers";
-import { createClient } from "@/lib/supabase/client";
+import {
+  formatDate,
+  formatDayAndTime,
+  groupPhotosByDate,
+  photoTakenAt,
+  userInitials,
+} from "@/lib/helpers";
 import { cn } from "@/lib/utils";
-import { Photo } from "@/types/db";
+import { ViewerPhoto } from "@/types/db";
 import { IconCheck } from "@tabler/icons-react";
 import Image from "next/image";
 
 type PhotoGridProps = {
-  photos: Photo[] | null;
+  photos: ViewerPhoto[] | null;
   selectionMode: boolean;
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
+  onOpen: (id: string) => void;
 };
 
 function PhotoGrid({
@@ -19,14 +25,14 @@ function PhotoGrid({
   selectionMode,
   selectedIds,
   onToggleSelect,
+  onOpen,
 }: PhotoGridProps) {
   const groups = groupPhotosByDate(photos ?? []);
-  const supabase = createClient();
 
   return (
     <div className="">
       {Object.entries(groups).map(([label, groupPhotos]) => {
-        const dateLabel = formatDate(new Date(groupPhotos[0].created_at));
+        const dateLabel = formatDate(new Date(photoTakenAt(groupPhotos[0])));
         const showDateLabel = label === "Today" || label === "Yesterday";
         return (
           <div key={label}>
@@ -38,27 +44,31 @@ function PhotoGrid({
             {/* grid */}
             <div className="grid grid-cols-4 gap-2">
               {groupPhotos.map((photo) => {
-                const photoUrl = supabase.storage
-                  .from("photos")
-                  .getPublicUrl(photo.storage_path).data.publicUrl;
                 const isSelected = selectedIds.has(photo.id);
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={photo.id}
-                    onClick={
-                      selectionMode ? () => onToggleSelect(photo.id) : undefined
+                    onClick={() =>
+                      selectionMode ? onToggleSelect(photo.id) : onOpen(photo.id)
                     }
+                    aria-label={
+                      selectionMode
+                        ? `${isSelected ? "Deselect" : "Select"} photo from ${formatDayAndTime(new Date(photoTakenAt(photo)))}`
+                        : `Open photo from ${formatDayAndTime(new Date(photoTakenAt(photo)))}`
+                    }
+                    aria-pressed={selectionMode ? isSelected : undefined}
                     className={cn(
-                      "relative aspect-square rounded-md overflow-hidden",
-                      selectionMode && "cursor-pointer",
+                      "relative aspect-square rounded-md overflow-hidden cursor-pointer",
                       isSelected && "ring-2 ring-blue-600",
                     )}
                   >
                     <Image
-                      src={photoUrl}
-                      alt={`Photo uploaded by ${photo.uploaded_by_name}`}
+                      src={photo.url}
+                      alt={`Photo uploaded by ${photo.uploaded_by_name ?? "unknown"}`}
                       fill
                       sizes="25vw"
+                      className="object-cover"
                     />
                     <div className="absolute bottom-2 left-2 flex items-center justify-center size-6 rounded-full bg-white text-foreground text-xs font-normal shadow-sm">
                       {userInitials(photo.uploaded_by_name)}
@@ -81,7 +91,7 @@ function PhotoGrid({
                         )}
                       </div>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>

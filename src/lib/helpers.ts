@@ -36,14 +36,55 @@ export function formatTime(date: Date): string {
   }); // 2:15 PM
 }
 
+// "Today · 4:18 PM", "Yesterday · 9:02 AM", "Sep 30 · 4:18 PM", and the year
+// only once it isn't this year.
+export function formatDayAndTime(date: Date): string {
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+
+  const key = toLocalDate(date);
+  const day =
+    key === toLocalDate(now)
+      ? "Today"
+      : key === toLocalDate(yesterday)
+        ? "Yesterday"
+        : formatDate(date, { year: date.getFullYear() !== now.getFullYear() });
+
+  return `${day} · ${formatTime(date)}`;
+}
+
+// Feet up close (crews think in feet on a site), miles past ~1000 ft.
+export function formatDistance(miles: number): string {
+  const feet = miles * 5280;
+  if (feet < 1000) return `${Math.max(10, Math.round(feet / 10) * 10)} ft`;
+  if (miles < 10) return `${miles.toFixed(1)} mi`;
+  return `${Math.round(miles).toLocaleString("en-US")} mi`;
+}
+
+// The time a photo is about — when it was taken if we know, else when it was
+// uploaded. Grouping, sorting and the viewer all go through this so the grid
+// and the viewer's swipe order always agree.
+export function photoTakenAt(photo: {
+  created_at: string;
+  captured_at?: string | null;
+}): string {
+  return photo.captured_at ?? photo.created_at;
+}
+
+// Mirrored by the CHECK on photos.note in
+// supabase/migrations/0003_photo_viewer_metadata.sql.
+export const PHOTO_NOTE_MAX_LENGTH = 1000;
+
 export function getDateRange(photos: SharedPhoto[]): string {
   if (photos.length === 0) return "";
 
-  let earliest = photos[0].created_at;
-  let latest = photos[0].created_at;
+  let earliest = photoTakenAt(photos[0]);
+  let latest = earliest;
   for (const photo of photos) {
-    if (photo.created_at < earliest) earliest = photo.created_at;
-    if (photo.created_at > latest) latest = photo.created_at;
+    const takenAt = photoTakenAt(photo);
+    if (takenAt < earliest) earliest = takenAt;
+    if (takenAt > latest) latest = takenAt;
   }
 
   const start = formatDate(new Date(earliest), { year: false });
@@ -80,9 +121,11 @@ export function checkUploadSize(file: File): string | null {
   )} — try a smaller photo or lower your camera resolution.`;
 }
 
-export function groupPhotosByDate<T extends { created_at: string }>(
-  photos: T[],
-): Record<string, T[]> {
+// Groups by the day a photo was taken (falling back to upload time), so a
+// photo shot Monday and uploaded Friday files under Monday.
+export function groupPhotosByDate<
+  T extends { created_at: string; captured_at?: string | null },
+>(photos: T[]): Record<string, T[]> {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -94,13 +137,13 @@ export function groupPhotosByDate<T extends { created_at: string }>(
   // and photos within each day are newest-first too.
   const sorted = [...photos].sort(
     (a, b) =>
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      new Date(photoTakenAt(b)).getTime() - new Date(photoTakenAt(a)).getTime(),
   );
 
   const groups: Record<string, T[]> = {};
 
   for (const photo of sorted) {
-    const photoDate = new Date(photo.created_at);
+    const photoDate = new Date(photoTakenAt(photo));
     const photoKey = toLocalDate(photoDate);
 
     let label: string;

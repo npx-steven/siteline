@@ -1,20 +1,27 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Photo, Document } from "@/types/db";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { ViewerPhoto, Document } from "@/types/db";
+import { Coordinates } from "@/types/location";
 import ProjectHero from "@/components/project/project-hero";
 import ProjectTabs from "@/components/project/project-tabs";
 import { useNavVisibility } from "@/lib/nav-visibility-context";
 import ShareDrawer from "./share-drawer";
 import { generateShareLink } from "@/actions/share";
 import { toast } from "sonner";
+import PhotoViewer from "@/components/photo-viewer/photo-viewer";
+import { usePhotoParam } from "@/components/photo-viewer/use-photo-param";
+import { orderPhotosForViewer } from "@/lib/photos";
+import { updatePhotoNoteAction } from "@/actions/media";
 
 type ProjectShellProps = {
   projectId: string;
   projectName: string;
   projectAddress: string;
+  siteLocation: Coordinates | null;
   coverPhotoUrl: string | null;
-  photos: Photo[] | null;
+  photos: ViewerPhoto[] | null;
   documents: Document[] | null;
 };
 
@@ -22,10 +29,27 @@ function ProjectShell({
   projectId,
   projectName,
   projectAddress,
+  siteLocation,
   coverPhotoUrl,
   photos,
   documents,
 }: ProjectShellProps) {
+  const router = useRouter();
+  const photoViewer = usePhotoParam();
+  const viewerPhotos = useMemo(
+    () => orderPhotosForViewer(photos ?? []),
+    [photos],
+  );
+
+  const handleSaveNote = useCallback(
+    async (photoId: string, note: string) => {
+      const { error } = await updatePhotoNoteAction(projectId, photoId, note);
+      if (!error) router.refresh();
+      return error;
+    },
+    [projectId, router],
+  );
+
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [shareDrawerOpen, setShareDrawerOpen] = useState(false);
@@ -137,6 +161,15 @@ function ProjectShell({
         onToggleSelect={onToggleSelect}
         onSelectAll={onSelectAll}
         onShareClick={() => setShareDrawerOpen(true)}
+        onOpenPhoto={photoViewer.open}
+      />
+      <PhotoViewer
+        photos={viewerPhotos}
+        openId={photoViewer.openId}
+        site={siteLocation}
+        onShow={photoViewer.show}
+        onClose={photoViewer.close}
+        onSaveNote={handleSaveNote}
       />
       <ShareDrawer
         open={shareDrawerOpen}

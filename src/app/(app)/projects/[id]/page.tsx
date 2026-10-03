@@ -1,5 +1,6 @@
 import ProjectShell from "@/components/project/project-shell";
 import { createClient } from "@/lib/supabase/server";
+import { parsePostgisPoint, toViewerPhoto } from "@/lib/photos";
 import { Photo } from "@/types/db";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
@@ -32,13 +33,22 @@ async function ProjectPage({ params }: ProjectProps) {
     ? supabase.storage.from("photos").getPublicUrl(coverPhoto).data.publicUrl
     : null;
 
+  const photos = sortProjectsByRecent.map((photo: Photo) =>
+    toViewerPhoto(
+      photo,
+      supabase.storage.from("photos").getPublicUrl(photo.storage_path).data
+        .publicUrl,
+    ),
+  );
+
   return (
     <ProjectShell
       projectId={id}
       projectName={project.name}
       projectAddress={project.address}
+      siteLocation={parsePostgisPoint(project.location)}
       coverPhotoUrl={coverPhotoUrl}
-      photos={sortProjectsByRecent}
+      photos={photos}
       documents={project.documents}
     />
   );
