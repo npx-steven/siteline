@@ -33,25 +33,16 @@ export async function createCompanyAction(
 
   const { company_name } = parseData.data;
 
-  // Insert new company into database
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .insert({ name: company_name, owner_id: user.id })
-    .select("id")
-    .single();
+  // Clients can't write users.company_id or users.role directly, so the
+  // company insert and the owner assignment happen together in one RPC.
+  const { error } = await supabase.rpc("create_company", { company_name });
 
-  if (companyError || !company) {
-    return { error: "Failed to create company" };
-  }
-
-  // Update User Table
-  const { error: userError } = await supabase
-    .from("users")
-    .update({ company_id: company.id, role: "owner" })
-    .eq("id", user.id);
-
-  if (userError) {
-    return { error: "Failed to update users table" };
+  if (error) {
+    // P0001 is a RAISE from inside the function — its message is user-facing.
+    return {
+      error:
+        error.code === "P0001" ? error.message : "Failed to create company",
+    };
   }
 
   return { error: null };

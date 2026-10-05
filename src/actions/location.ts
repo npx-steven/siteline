@@ -3,6 +3,7 @@
 import type { Coordinates } from "@/types/location";
 import type { CreateProjectFormValues } from "@/lib/validators/project";
 import { createClient } from "@/lib/supabase/server";
+import { signPhotoUrls } from "@/lib/supabase/storage";
 import { cookies } from "next/headers";
 
 interface MapboxAddressContext {
@@ -105,34 +106,37 @@ export async function findProjectsNearAction(coords: Coordinates) {
   if (error) return { data: null, error: error.message };
   if (!data) return { data: [], error: null };
 
-  const resolved = data.map(
-    (row: {
-      id: string;
-      name: string;
-      address: string;
-      thumbnail_path: string | null;
-      photo_count: number;
-      last_photo_at: string | null;
-      project_lat: number;
-      project_lng: number;
-    }) => {
-      const thumbnailUrl = row.thumbnail_path
-        ? supabase.storage.from("photos").getPublicUrl(row.thumbnail_path).data
-            .publicUrl
-        : null;
-
-      return {
-        id: row.id,
-        name: row.name,
-        address: row.address,
-        thumbnailUrl,
-        photoCount: row.photo_count,
-        lastPhotoAt: row.last_photo_at,
-        projectLat: row.project_lat,
-        projectLng: row.project_lng,
-      };
-    },
+  const rows = data as {
+    id: string;
+    name: string;
+    address: string;
+    thumbnail_path: string | null;
+    photo_count: number;
+    last_photo_at: string | null;
+    project_lat: number;
+    project_lng: number;
+  }[];
+  const thumbnailUrls = await signPhotoUrls(
+    supabase,
+    rows.map((row) => row.thumbnail_path),
   );
+
+  const resolved = rows.map((row) => {
+    const thumbnailUrl = row.thumbnail_path
+      ? (thumbnailUrls.get(row.thumbnail_path) ?? null)
+      : null;
+
+    return {
+      id: row.id,
+      name: row.name,
+      address: row.address,
+      thumbnailUrl,
+      photoCount: row.photo_count,
+      lastPhotoAt: row.last_photo_at,
+      projectLat: row.project_lat,
+      projectLng: row.project_lng,
+    };
+  });
 
   return { data: resolved, error: null };
 }
@@ -181,34 +185,37 @@ export async function getAllProjectsAction() {
   if (error) return { data: null, error: error.message };
   if (!data) return { data: [], error: null };
 
-  const resolved = data.map(
-    (row: {
-      id: string;
-      name: string;
-      address: string;
-      thumbnail_path: string | null;
-      photo_count: number;
-      last_photo_at: string | null;
-      project_lat: number | null;
-      project_lng: number | null;
-    }) => {
-      const thumbnailUrl = row.thumbnail_path
-        ? supabase.storage.from("photos").getPublicUrl(row.thumbnail_path).data
-            .publicUrl
-        : null;
-
-      return {
-        id: row.id,
-        name: row.name,
-        address: row.address,
-        thumbnailUrl,
-        photoCount: row.photo_count,
-        lastPhotoAt: row.last_photo_at,
-        projectLat: row.project_lat,
-        projectLng: row.project_lng,
-      };
-    },
+  const rows = data as {
+    id: string;
+    name: string;
+    address: string;
+    thumbnail_path: string | null;
+    photo_count: number;
+    last_photo_at: string | null;
+    project_lat: number | null;
+    project_lng: number | null;
+  }[];
+  const thumbnailUrls = await signPhotoUrls(
+    supabase,
+    rows.map((row) => row.thumbnail_path),
   );
+
+  const resolved = rows.map((row) => {
+    const thumbnailUrl = row.thumbnail_path
+      ? (thumbnailUrls.get(row.thumbnail_path) ?? null)
+      : null;
+
+    return {
+      id: row.id,
+      name: row.name,
+      address: row.address,
+      thumbnailUrl,
+      photoCount: row.photo_count,
+      lastPhotoAt: row.last_photo_at,
+      projectLat: row.project_lat,
+      projectLng: row.project_lng,
+    };
+  });
 
   return { data: resolved, error: null };
 }

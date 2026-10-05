@@ -6,41 +6,27 @@ import { revalidatePath } from "next/cache";
 import { getAuthUser } from "./auth";
 
 export async function validateInviteAction(token: string): Promise<{
-  invite: { company_id: string; company_name: string } | null;
+  invite: { company_name: string } | null;
   error: string | null;
 }> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  // Grab the invite entity using the token param
-  const { data } = await supabase
-    .from("invites")
-    .select("company_id, status, expires_at, companies(name)")
-    .eq("token", token)
-    .single();
+  // Invites and companies aren't readable directly — get_invite resolves only
+  // the exact token, and only while it is pending and unexpired.
+  const { data, error } = await supabase
+    .rpc("get_invite", { invite_token: token })
+    .maybeSingle<{ company_name: string; role: string }>();
 
-  if (!data) {
+  if (error) {
     return { invite: null, error: "Failed to get invite data" };
   }
 
-  if (data.status === "revoked") {
-    return { invite: null, error: "Invite has been revoked" };
+  if (!data) {
+    return { invite: null, error: "Invite is invalid or has expired" };
   }
 
-  if (new Date(data.expires_at) < new Date()) {
-    return { invite: null, error: "Invite has expired" };
-  }
-
-  const companies = Array.isArray(data.companies)
-    ? data.companies[0]
-    : data.companies;
-
-  const invite = {
-    company_id: data.company_id,
-    company_name: companies?.name ?? "Unknown Company",
-  };
-
-  return { invite, error: null };
+  return { invite: { company_name: data.company_name }, error: null };
 }
 
 export async function joinCompanyAction(
@@ -54,46 +40,17 @@ export async function joinCompanyAction(
     return { error: "Not Authenticated" };
   }
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id")
-    .eq("id", user.id)
-    .single();
+  // accept_invite validates the token and assigns the invite's role (never
+  // owner) in one step — clients can't write company_id or role themselves.
+  const { error } = await supabase.rpc("accept_invite", {
+    invite_token: token,
+  });
 
-  if (userData?.company_id) {
-    return { error: "Already belongs to a company" };
-  }
-
-  // Get invite — now also selecting role
-  const { data: invite } = await supabase
-    .from("invites")
-    .select("company_id, status, expires_at, role")
-    .eq("token", token)
-    .single();
-
-  if (!invite) {
-    return { error: "Invalid invite link" };
-  }
-
-  // Validate status: must be pending (not revoked, not already accepted)
-  if (invite.status !== "pending") {
-    return { error: "This invite is no longer valid" };
-  }
-
-  if (new Date(invite.expires_at) < new Date()) {
-    return { error: "Invite has expired" };
-  }
-
-  // Assign the role the invite specifies (project_manager or crew) — never owner
-  const role = invite.role === "project_manager" ? "project_manager" : "crew";
-
-  const { error: updateError } = await supabase
-    .from("users")
-    .update({ company_id: invite.company_id, role })
-    .eq("id", user.id);
-
-  if (updateError) {
-    return { error: "Failed to join company" };
+  if (error) {
+    // P0001 is a RAISE from inside the function — its message is user-facing.
+    return {
+      error: error.code === "P0001" ? error.message : "Failed to join company",
+    };
   }
 
   revalidatePath("/account");

@@ -1,5 +1,6 @@
 import ProjectShell from "@/components/project/project-shell";
 import { createClient } from "@/lib/supabase/server";
+import { signPhotoUrls } from "@/lib/supabase/storage";
 import { parsePostgisPoint, toViewerPhoto } from "@/lib/photos";
 import { Photo } from "@/types/db";
 import { cookies } from "next/headers";
@@ -28,18 +29,19 @@ async function ProjectPage({ params }: ProjectProps) {
     return b.created_at > a.created_at ? 1 : -1;
   });
 
-  const coverPhoto = sortProjectsByRecent[0]?.storage_path ?? null;
-  const coverPhotoUrl = coverPhoto
-    ? supabase.storage.from("photos").getPublicUrl(coverPhoto).data.publicUrl
-    : null;
-
-  const photos = sortProjectsByRecent.map((photo: Photo) =>
-    toViewerPhoto(
-      photo,
-      supabase.storage.from("photos").getPublicUrl(photo.storage_path).data
-        .publicUrl,
-    ),
+  const photoUrls = await signPhotoUrls(
+    supabase,
+    sortProjectsByRecent.map((photo: Photo) => photo.storage_path),
   );
+
+  const coverPhoto = sortProjectsByRecent[0]?.storage_path ?? null;
+  const coverPhotoUrl = coverPhoto ? (photoUrls.get(coverPhoto) ?? null) : null;
+
+  // A photo whose file failed to sign is left out rather than shown broken.
+  const photos = sortProjectsByRecent.flatMap((photo: Photo) => {
+    const url = photoUrls.get(photo.storage_path);
+    return url ? [toViewerPhoto(photo, url)] : [];
+  });
 
   return (
     <ProjectShell

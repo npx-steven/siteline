@@ -2,6 +2,7 @@ import SharePageClient from "@/components/share/share-page-client";
 import { SHARE_LINK_TTL_DAYS } from "@/lib/helpers";
 import { parsePostgisPoint, toViewerPhoto } from "@/lib/photos";
 import { createServiceClient } from "@/lib/supabase/server";
+import { signPhotoUrls } from "@/lib/supabase/storage";
 import { SharedPhoto } from "@/types/db";
 import { IconClockOff } from "@tabler/icons-react";
 import { notFound } from "next/navigation";
@@ -73,12 +74,16 @@ async function SharePage({ params }: SharePageProps) {
     .flatMap((row) => row.photos)
     .filter((photo): photo is NonNullable<typeof photo> => photo !== null);
 
-  // Resolve storage paths into public URLs (photos live in a public bucket).
-  const sharedPhotos: SharedPhoto[] = grantedPhotos.map((photo) => {
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("photos").getPublicUrl(photo.storage_path);
-    return toViewerPhoto(photo, publicUrl);
+  // The photos bucket is private: sign only the granted paths, short-lived.
+  // The page renders per request, so a reload always gets fresh URLs.
+  const photoUrls = await signPhotoUrls(
+    supabase,
+    grantedPhotos.map((photo) => photo.storage_path),
+  );
+
+  const sharedPhotos: SharedPhoto[] = grantedPhotos.flatMap((photo) => {
+    const url = photoUrls.get(photo.storage_path);
+    return url ? [toViewerPhoto(photo, url)] : [];
   });
 
   const company = Array.isArray(project.company)
