@@ -10,6 +10,8 @@ import {
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { forwardGeocodeAddress } from "./location";
+import { getActiveMembership } from "@/lib/membership";
+import { can } from "@/lib/permissions";
 
 export async function createProjectAction(
   formData: FormData,
@@ -23,21 +25,9 @@ export async function createProjectAction(
     return { error: "Not authenticated ", projectId: null };
   }
 
-  // Fetch company_id from user table
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("company_id")
-    .eq("id", user.id)
-    .single();
-
-  if (userError || !userData) {
-    return { error: "Failed to fetch user data", projectId: null };
-  }
-
-  // projects.company_id is nullable, so without this a mid-onboarding user
-  // would create a project with a null company — invisible to every
-  // company-scoped query, including their own.
-  if (!userData.company_id) {
+  // New projects go to the active company. RLS re-checks membership.
+  const membership = await getActiveMembership(supabase);
+  if (!membership) {
     return { error: "No company found", projectId: null };
   }
 
@@ -74,7 +64,7 @@ export async function createProjectAction(
     .from("projects")
     .insert({
       name: projectName,
-      company_id: userData.company_id,
+      company_id: membership.companyId,
       address: address,
       ...(location ? { location } : {}),
     })
@@ -98,15 +88,9 @@ export async function editProjectAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData, error: userDataError } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (userDataError || !userData) return { error: "Failed to fetch user info" };
-  if (!userData.company_id) return { error: "No company found" };
-  if (userData.role !== "owner" && userData.role !== "project_manager")
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageProject(membership.role))
     return { error: "Only owners and project managers can edit this project" };
 
   const parsed = editProjectSchema.safeParse({
@@ -134,7 +118,7 @@ export async function editProjectAction(
       ...(location ? { location } : {}),
     })
     .eq("id", id)
-    .eq("company_id", userData.company_id);
+    .eq("company_id", membership.companyId);
 
   if (projectError) return { error: "Failed to update project" };
 
@@ -154,15 +138,9 @@ export async function deleteProjectAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData, error: userDataError } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (userDataError || !userData) return { error: "Failed to fetch user info" };
-  if (!userData.company_id) return { error: "No company found" };
-  if (userData.role !== "owner" && userData.role !== "project_manager")
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageProject(membership.role))
     return { error: "Only owners and project managers can delete a project" };
 
   // Scope the lookup to the caller's company. A bare id lookup would let any
@@ -171,7 +149,7 @@ export async function deleteProjectAction(
     .from("projects")
     .select("company_id")
     .eq("id", id)
-    .eq("company_id", userData.company_id)
+    .eq("company_id", membership.companyId)
     .maybeSingle();
 
   if (error) {
@@ -191,7 +169,7 @@ export async function deleteProjectAction(
     .from("projects")
     .delete()
     .eq("id", id)
-    .eq("company_id", userData.company_id)
+    .eq("company_id", membership.companyId)
     .select("id");
 
   if (deleteError) {

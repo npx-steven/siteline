@@ -30,10 +30,15 @@ export async function signUpAction(
 
   const { email, password, first_name, last_name } = parseData.data;
 
-  // Create Supabase auth user
+  // Create Supabase auth user. The public.users profile row is created from
+  // this metadata by the on_auth_user_created trigger, in the same
+  // transaction, so an auth user can never exist without one.
   const { data, error: authError } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      data: { full_name: `${first_name.trim()} ${last_name.trim()}` },
+    },
   });
 
   if (authError) {
@@ -52,17 +57,6 @@ export async function signUpAction(
   // Supabase returns a user with an empty identities array instead of an error)
   if (data.user.identities && data.user.identities.length === 0) {
     return { error: "An account with this email already exists." };
-  }
-
-  const full_name = `${first_name.trim()} ${last_name.trim()}`;
-
-  // Insert profile row into public.users
-  const { error: dbError } = await supabase
-    .from("users")
-    .insert({ id: data.user.id, full_name });
-
-  if (dbError) {
-    return { error: dbError.message };
   }
 
   return { error: null };

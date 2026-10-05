@@ -5,6 +5,8 @@ import ProjectSettingsHeader from "@/components/project/settings/project-setting
 import ProjectSettingsStats from "@/components/project/settings/project-settings-stats";
 import { getAuthUser } from "@/actions/auth";
 import { createClient } from "@/lib/supabase/server";
+import { getActiveMembership } from "@/lib/membership";
+import { can } from "@/lib/permissions";
 import { ProjectSettings } from "@/types/project";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -23,7 +25,7 @@ async function ProjectSettingsPage({ params }: ProjectSettingsProps) {
 
   // Role decides whether the destructive actions render at all — the actions
   // themselves re-check server-side, this just avoids showing dead buttons.
-  const [{ data, error }, { data: userData }, { data: star }] =
+  const [{ data, error }, membership, { data: star }] =
     await Promise.all([
       supabase
         .from("projects")
@@ -32,7 +34,7 @@ async function ProjectSettingsPage({ params }: ProjectSettingsProps) {
         )
         .eq("id", id)
         .single(),
-      supabase.from("users").select("role").eq("id", user.id).single(),
+      getActiveMembership(supabase),
       // Per-user star; RLS restricts this to the current user's own row.
       supabase
         .from("project_stars")
@@ -50,8 +52,7 @@ async function ProjectSettingsPage({ params }: ProjectSettingsProps) {
     notFound();
   }
 
-  const canManage =
-    userData?.role === "owner" || userData?.role === "project_manager";
+  const canManage = membership ? can.manageProject(membership.role) : false;
 
   const projectSettings: ProjectSettings = {
     id: data.id,

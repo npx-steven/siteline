@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { ShareViewType } from "@/types/db";
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
+import { getActiveMembership } from "@/lib/membership";
+import { can } from "@/lib/permissions";
 
 type GenerateShareLinkResult =
   | { ok: true; token: string }
@@ -30,6 +32,11 @@ export async function generateShareLink(
 
   if (!user) {
     return { ok: false, error: "Not Authenticated" };
+  }
+
+  const membership = await getActiveMembership(supabase);
+  if (!membership || !can.sharePhotos(membership.role)) {
+    return { ok: false, error: "Only owners and project managers can share" };
   }
 
   //Confirm the project is connect to the user

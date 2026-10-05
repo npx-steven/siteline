@@ -13,7 +13,6 @@ type RawProjectRow = {
   name: string;
   address: string;
   location: { lat: number; lng: number } | null;
-  is_starred: boolean;
   created_at: string;
   updated_at: string;
   thumbnail_storage_path: string | null;
@@ -30,13 +29,12 @@ async function ProjectsPage() {
   const [{ data, error }, { data: userData }, { data: stars }] =
     await Promise.all([
       supabase.rpc("get_projects_with_thumbnails"),
-      // Must filter by id: the "users: select same company" policy returns
+      // Must filter by id: the "users: select self or teammate" policy returns
       // every teammate, so an unfiltered .single() errors once a company has
       // more than one member.
       supabase.from("users").select("full_name").eq("id", user.id).single(),
       // Stars are per user and RLS scopes this to auth.uid(), so it needs no
-      // filter of its own. Kept as a separate query rather than a join inside
-      // get_projects_with_thumbnails so the RPC stays untouched.
+      // filter of its own.
       supabase.from("project_stars").select("project_id"),
     ]);
 
@@ -60,8 +58,6 @@ async function ProjectsPage() {
     name: row.name,
     address: row.address,
     location: row.location,
-    // Deliberately ignores row.is_starred — the RPC still returns the old
-    // company-wide column, which project_stars replaced.
     is_starred: starredProjectIds.has(row.id),
     created_at: row.created_at,
     updated_at: row.updated_at,

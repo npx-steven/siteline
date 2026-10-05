@@ -23,6 +23,7 @@ type ProjectShellProps = {
   coverPhotoUrl: string | null;
   photos: ViewerPhoto[] | null;
   documents: Document[] | null;
+  canShare: boolean;
 };
 
 function ProjectShell({
@@ -33,6 +34,7 @@ function ProjectShell({
   coverPhotoUrl,
   photos,
   documents,
+  canShare,
 }: ProjectShellProps) {
   const router = useRouter();
   const photoViewer = usePhotoParam();
@@ -140,7 +142,7 @@ function ProjectShell({
         projectId={projectId}
         disabled={selectionMode}
         scrolled={scrolled}
-        onShareClick={() => setShareDrawerOpen(true)}
+        onShareClick={canShare ? () => setShareDrawerOpen(true) : undefined}
       />
       <div className="flex flex-col px-4 pt-4">
         <span className="text-2xl text-foreground font-bold">
@@ -160,7 +162,7 @@ function ProjectShell({
         onExitSelection={onExitSelection}
         onToggleSelect={onToggleSelect}
         onSelectAll={onSelectAll}
-        onShareClick={() => setShareDrawerOpen(true)}
+        onShareClick={canShare ? () => setShareDrawerOpen(true) : undefined}
         onOpenPhoto={photoViewer.open}
       />
       <PhotoViewer

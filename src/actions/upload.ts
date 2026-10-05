@@ -23,24 +23,20 @@ export async function uploadMediaAction(
   // Fetch user profile
   const { data: profile } = await supabase
     .from("users")
-    .select("full_name, company_id")
+    .select("full_name")
     .eq("id", user.id)
     .single();
   if (!profile) {
     return { error: "User doesnt exit in user table." };
   }
-  if (!profile.company_id) {
-    return { error: "User has no company." };
-  }
 
-  // projectId arrives from the client, so confirm it belongs to the caller's
-  // company before writing — otherwise a row could be filed against another
-  // company's project.
+  // projectId arrives from the client. Reading it through RLS confirms the
+  // caller is a member of its company, and gives the company the file is
+  // stored under. The row's own company_id is set by trigger from the project.
   const { data: project } = await supabase
     .from("projects")
-    .select("id")
+    .select("id, company_id")
     .eq("id", projectId)
-    .eq("company_id", profile.company_id)
     .maybeSingle();
 
   if (!project) {
@@ -50,7 +46,7 @@ export async function uploadMediaAction(
   // Construct file path
   const fileId = crypto.randomUUID();
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-  const filePath = `${profile.company_id}/${projectId}/${fileId}.${ext}`;
+  const filePath = `${project.company_id}/${projectId}/${fileId}.${ext}`;
 
   // Upload file to storage
   const { data: storageData, error: storageError } = await supabase.storage
@@ -58,6 +54,13 @@ export async function uploadMediaAction(
     .upload(filePath, file);
 
   if (storageError) {
+    // Storage policies mirror the table's (crew can't add documents), so a
+    // role rejection usually surfaces here, before the row insert.
+    if (storageError.message.includes("row-level security")) {
+      return {
+        error: `You don't have permission to add ${bucket} to this project.`,
+      };
+    }
     return { error: `Storage: ${storageError.message}` };
   }
 
@@ -84,8 +87,7 @@ export async function uploadMediaAction(
   });
   if (tableError) {
     // The bytes are already in the bucket, so drop them rather than leaving an
-    // unreferenced file behind. Reachable today: the documents INSERT policy is
-    // owner-or-pm, so a crew member's document upload fails right here.
+    // unreferenced file behind.
     await supabase.storage.from(bucket).remove([storageData.path]);
 
     if (tableError.code === "42501") {

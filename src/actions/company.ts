@@ -8,6 +8,8 @@ import {
 import { cookies } from "next/headers";
 import { getAuthUser } from "./auth";
 import { revalidatePath } from "next/cache";
+import { getActiveMembership } from "@/lib/membership";
+import { can } from "@/lib/permissions";
 
 export async function createCompanyAction(
   formData: FormData,
@@ -33,8 +35,8 @@ export async function createCompanyAction(
 
   const { company_name } = parseData.data;
 
-  // Clients can't write users.company_id or users.role directly, so the
-  // company insert and the owner assignment happen together in one RPC.
+  // Clients can't write memberships, so the company insert and the owner
+  // membership happen together in one RPC.
   const { error } = await supabase.rpc("create_company", { company_name });
 
   if (error) {
@@ -61,20 +63,16 @@ export async function createInviteAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!userData?.company_id) return { error: "No company found" };
-  if (userData.role !== "owner") return { error: "Only owners can invite" };
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageInvites(membership.role))
+    return { error: "Only owners can invite" };
 
   const token = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
   const { error } = await supabase.from("invites").insert({
-    company_id: userData.company_id,
+    company_id: membership.companyId,
     sender_id: user.id,
     role,
     token,
@@ -98,19 +96,15 @@ export async function getOrCreateInviteAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!userData?.company_id) return { error: "No company found" };
-  if (userData.role !== "owner") return { error: "Only owners can invite" };
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageInvites(membership.role))
+    return { error: "Only owners can invite" };
 
   const { data: existing, error: lookupError } = await supabase
     .from("invites")
     .select("token, expires_at")
-    .eq("company_id", userData.company_id)
+    .eq("company_id", membership.companyId)
     .eq("role", role)
     .eq("status", "pending")
     .gt("expires_at", new Date().toISOString())
@@ -140,19 +134,15 @@ export async function resetInviteAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!userData?.company_id) return { error: "No company found" };
-  if (userData.role !== "owner") return { error: "Only owners can invite" };
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageInvites(membership.role))
+    return { error: "Only owners can invite" };
 
   const { error: revokeError } = await supabase
     .from("invites")
     .update({ status: "revoked" })
-    .eq("company_id", userData.company_id)
+    .eq("company_id", membership.companyId)
     .eq("role", role)
     .eq("status", "pending");
 
@@ -175,18 +165,9 @@ export async function revokeInviteAction(
     return { error: "Not authenticated" };
   }
 
-  // Confirm user owner role
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (!userData) {
-    return { error: "Failed to fetch user" };
-  }
-
-  if (userData.role !== "owner") {
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.manageInvites(membership.role)) {
     return { error: "Only owners can revoke invites" };
   }
 
@@ -194,7 +175,7 @@ export async function revokeInviteAction(
     .from("invites")
     .update({ status: "revoked" })
     .eq("token", token)
-    .eq("company_id", userData.company_id);
+    .eq("company_id", membership.companyId);
 
   if (error) {
     return { error: "Failed to revoke invite" };
@@ -212,15 +193,9 @@ export async function editCompanyAction(
   const user = await getAuthUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: userData, error: userDataError } = await supabase
-    .from("users")
-    .select("company_id, role")
-    .eq("id", user.id)
-    .single();
-
-  if (userDataError || !userData) return { error: "Failed to fetch user info" };
-  if (!userData.company_id) return { error: "No company found" };
-  if (userData.role !== "owner")
+  const membership = await getActiveMembership(supabase);
+  if (!membership) return { error: "No company found" };
+  if (!can.editCompany(membership.role))
     return { error: "Only owners can edit company" };
 
   const parsed = editCompanySchema.safeParse({
@@ -234,7 +209,7 @@ export async function editCompanyAction(
   const { error: companyError } = await supabase
     .from("companies")
     .update({ name: company_name, license_number: license_number || null })
-    .eq("id", userData.company_id);
+    .eq("id", membership.companyId);
 
   if (companyError) return { error: "Failed to update company" };
 

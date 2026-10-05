@@ -1,6 +1,8 @@
 import ProjectShell from "@/components/project/project-shell";
 import { createClient } from "@/lib/supabase/server";
 import { signPhotoUrls } from "@/lib/supabase/storage";
+import { getActiveMembership } from "@/lib/membership";
+import { can } from "@/lib/permissions";
 import { parsePostgisPoint, toViewerPhoto } from "@/lib/photos";
 import { Photo } from "@/types/db";
 import { cookies } from "next/headers";
@@ -15,11 +17,14 @@ async function ProjectPage({ params }: ProjectProps) {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("*, photos(*), documents(*)")
-    .eq("id", id)
-    .single();
+  const [{ data: project }, membership] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("*, photos(*), documents(*)")
+      .eq("id", id)
+      .single(),
+    getActiveMembership(supabase),
+  ]);
 
   if (!project) {
     notFound();
@@ -52,6 +57,7 @@ async function ProjectPage({ params }: ProjectProps) {
       coverPhotoUrl={coverPhotoUrl}
       photos={photos}
       documents={project.documents}
+      canShare={membership ? can.sharePhotos(membership.role) : false}
     />
   );
 }

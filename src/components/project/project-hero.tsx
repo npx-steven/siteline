@@ -11,7 +11,8 @@ type ProjectHeroProps = {
   projectId: string;
   disabled: boolean;
   scrolled: boolean;
-  onShareClick: () => void;
+  // Omitted when the viewer's role can't share — the button isn't rendered.
+  onShareClick?: () => void;
 };
 
 function ProjectHero({
@@ -45,7 +46,7 @@ function ProjectHero({
     </Link>
   );
 
-  const shareButton = (
+  const shareButton = onShareClick && (
     <Button
       variant="frosted"
       size="icon-lg"

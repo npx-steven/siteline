@@ -49,14 +49,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(new URL("/projects", request.url));
   }
 
-  // 4. Has user + no company → redirect to onboarding/company
-  const { data: userData } = await supabase
-    .from("users")
-    .select("company_id")
-    .eq("id", user.sub)
-    .single();
+  // 4. Has user + no membership → redirect to onboarding/company
+  const { data: membership } = await supabase
+    .rpc("get_active_membership")
+    .maybeSingle();
 
-  if (!userData?.company_id) {
+  if (!membership) {
     // No company yet — only /onboarding/company is valid; everything
     // else (including /onboarding/welcome) sends them back to create one.
     if (path !== "/onboarding/company") {

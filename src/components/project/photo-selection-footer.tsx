@@ -23,7 +23,8 @@ import { Spinner } from "../ui/spinner";
 type PhotoSelectionFooterProps = {
   selectedCount: number;
   onCancel: () => void;
-  onShareClick: () => void;
+  // Omitted when the viewer's role can't share — the button isn't rendered.
+  onShareClick?: () => void;
   onDownload: () => Promise<void>;
   onDelete: () => Promise<void>;
 };
@@ -75,24 +76,26 @@ function PhotoSelectionFooter({
             </div>
           </button>
 
-          <button
-            onClick={onShareClick}
-            disabled={!hasSelection}
-            className="flex flex-col items-center gap-1 min-w-16"
-            aria-label="Share selected photos"
-          >
-            <div
-              className={cn(
-                "w-14 h-14 rounded-full flex items-center justify-center",
-                hasSelection ? "bg-[#2563eb]" : "bg-[#2563eb]",
-              )}
+          {onShareClick && (
+            <button
+              onClick={onShareClick}
+              disabled={!hasSelection}
+              className="flex flex-col items-center gap-1 min-w-16"
+              aria-label="Share selected photos"
             >
-              <IconShare2
-                size={22}
-                className={hasSelection ? "text-card" : "text-card"}
-              />
-            </div>
-          </button>
+              <div
+                className={cn(
+                  "w-14 h-14 rounded-full flex items-center justify-center",
+                  hasSelection ? "bg-[#2563eb]" : "bg-[#2563eb]",
+                )}
+              >
+                <IconShare2
+                  size={22}
+                  className={hasSelection ? "text-card" : "text-card"}
+                />
+              </div>
+            </button>
+          )}
 
           <button
             onClick={() => setMoreDrawerOpen(true)}

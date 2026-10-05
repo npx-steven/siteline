@@ -36,7 +36,7 @@ type ProjectTabsProps = {
   onExitSelection: () => void;
   onToggleSelect: (id: string) => void;
   onSelectAll: (ids: string[]) => void;
-  onShareClick: () => void;
+  onShareClick?: () => void;
   onOpenPhoto: (id: string) => void;
 };
 
