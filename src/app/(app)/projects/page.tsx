@@ -9,13 +9,10 @@ import React from "react";
 
 type RawProjectRow = {
   id: string;
-  company_id: string;
   name: string;
   address: string;
-  location: { lat: number; lng: number } | null;
   created_at: string;
-  updated_at: string;
-  thumbnail_storage_path: string | null;
+  thumbnail_path: string | null;
   project_lat: number | null;
   project_lng: number | null;
 };
@@ -28,7 +25,7 @@ async function ProjectsPage() {
 
   const [{ data, error }, { data: userData }, { data: stars }] =
     await Promise.all([
-      supabase.rpc("get_projects_with_thumbnails"),
+      supabase.rpc("find_all_projects"),
       // Must filter by id: the "users: select self or teammate" policy returns
       // every teammate, so an unfiltered .single() errors once a company has
       // more than one member.
@@ -45,7 +42,7 @@ async function ProjectsPage() {
   const rows = (data ?? []) as RawProjectRow[];
   const thumbnailUrls = await signPhotoUrls(
     supabase,
-    rows.map((row) => row.thumbnail_storage_path),
+    rows.map((row) => row.thumbnail_path),
   );
 
   const starredProjectIds = new Set(
@@ -54,15 +51,12 @@ async function ProjectsPage() {
 
   const projects: ProjectWithThumbnail[] = rows.map((row) => ({
     id: row.id,
-    company_id: row.company_id,
     name: row.name,
     address: row.address,
-    location: row.location,
     is_starred: starredProjectIds.has(row.id),
     created_at: row.created_at,
-    updated_at: row.updated_at,
-    thumbnail_url: row.thumbnail_storage_path
-      ? (thumbnailUrls.get(row.thumbnail_storage_path) ?? null)
+    thumbnail_url: row.thumbnail_path
+      ? (thumbnailUrls.get(row.thumbnail_path) ?? null)
       : null,
     project_lat: row.project_lat,
     project_lng: row.project_lng,

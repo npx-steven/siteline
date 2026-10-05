@@ -50,7 +50,9 @@ export async function createCompanyAction(
   return { error: null };
 }
 
-export async function createInviteAction(
+// Not exported: in a "use server" file every export is a callable endpoint,
+// and this is only reached through getOrCreateInviteAction/resetInviteAction.
+async function createInviteAction(
   role: "crew" | "project_manager",
 ): Promise<{
   error: string | null;
@@ -149,39 +151,6 @@ export async function resetInviteAction(
   if (revokeError) return { error: "Failed to revoke current invite" };
 
   return await createInviteAction(role);
-}
-
-export async function revokeInviteAction(
-  token: string,
-): Promise<{ error: string | null }> {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  // Get Authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { error: "Not authenticated" };
-  }
-
-  const membership = await getActiveMembership(supabase);
-  if (!membership) return { error: "No company found" };
-  if (!can.manageInvites(membership.role)) {
-    return { error: "Only owners can revoke invites" };
-  }
-
-  const { error } = await supabase
-    .from("invites")
-    .update({ status: "revoked" })
-    .eq("token", token)
-    .eq("company_id", membership.companyId);
-
-  if (error) {
-    return { error: "Failed to revoke invite" };
-  }
-
-  return { error: null };
 }
 
 export async function editCompanyAction(

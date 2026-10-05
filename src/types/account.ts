@@ -6,7 +6,6 @@ export type AccountData = {
     role: Role;
     email: string;
     createdAt: string;
-    gpsAutofile: boolean;
     phone: string | null;
   };
   company: {
@@ -26,5 +25,4 @@ export type AccountData = {
 
 export type Profile = AccountData["profile"];
 export type Company = AccountData["company"];
-export type Team = AccountData["team"];
 export type TeamMember = AccountData["team"][number];

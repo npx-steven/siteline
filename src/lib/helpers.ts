@@ -221,7 +221,9 @@ export function companyFirstTwoInitals(name: string): string {
     .toUpperCase();
 }
 
-export function searchProject<T extends Project>(
+export function searchProject<
+  T extends Pick<Project, "name" | "address">,
+>(
   projects: T[],
   searchQuery: string,
 ): T[] {

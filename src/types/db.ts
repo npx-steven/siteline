@@ -8,7 +8,6 @@ export type User = {
   created_at: string;
   // Which company the app shows. Never used for authorization.
   active_company_id: string | null;
-  gps_autofile: boolean;
   phone: string | null;
 };
 
@@ -16,17 +15,7 @@ export type Company = {
   id: string;
   name: string;
   created_at: string;
-  updated_at: string;
   license_number: string | null;
-};
-
-// One row per (company, user). The only record of who belongs where.
-export type Membership = {
-  company_id: string;
-  user_id: string;
-  role: Role;
-  invited_by: string | null;
-  created_at: string;
 };
 
 export type LocationSource = "exif" | "device";
@@ -86,36 +75,11 @@ export type Project = {
   name: string;
   address: string;
   created_at: string;
-  updated_at: string;
   // Resolved per request from project_stars for the *current user*.
   is_starred: boolean;
   location: { lat: number; lng: number } | null;
 };
 
-// One row per (user, project) they have starred. See
-// supabase/migrations/0002_project_stars.sql.
-export type ProjectStar = {
-  user_id: string;
-  project_id: string;
-  created_at: string;
-};
-
 export type ShareViewType = "gallery" | "timeline";
 
-export type ShareLink = {
-  id: string;
-  token: string;
-  project_id: string;
-  company_id: string;
-  created_by: string;
-  created_at: string;
-  expires_at: string;
-  view_type: ShareViewType;
-};
-
 export type SharedPhoto = ViewerPhoto;
-
-export type ShareLinkPhoto = {
-  share_link_id: string;
-  photo_id: string;
-};

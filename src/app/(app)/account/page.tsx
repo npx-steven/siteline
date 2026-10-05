@@ -18,10 +18,10 @@ async function AccountPage() {
   const [{ data: userInfo, error }, membership] = await Promise.all([
     supabase
       .from("users")
-      .select("full_name, created_at, gps_autofile, phone")
+      .select("full_name, created_at, phone")
       .eq("id", user.id)
       .single<
-        Pick<User, "full_name" | "created_at" | "gps_autofile" | "phone">
+        Pick<User, "full_name" | "created_at" | "phone">
       >(),
     getActiveMembership(supabase),
   ]);
@@ -74,7 +74,6 @@ async function AccountPage() {
       role: membership.role,
       email: user.email ?? "",
       createdAt: userInfo.created_at,
-      gpsAutofile: userInfo.gps_autofile,
       phone: userInfo.phone,
     },
     company: {

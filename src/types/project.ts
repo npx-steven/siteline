@@ -1,6 +1,9 @@
 import { Project } from "./db";
 
-export type ProjectWithThumbnail = Project & {
+export type ProjectWithThumbnail = Pick<
+  Project,
+  "id" | "name" | "address" | "created_at" | "is_starred"
+> & {
   thumbnail_url: string | null;
   project_lat: number | null;
   project_lng: number | null;
