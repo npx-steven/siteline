@@ -29,7 +29,9 @@ export type TeamMember = {
   id: string;
   fullName: string;
   email: string;
+  phone: string | null;
   role: Role;
+  joinedAt: string;
   isYou: boolean;
 };
 

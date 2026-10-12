@@ -81,7 +81,7 @@ export async function signInAction(
 
   const { email, password } = parseData.data;
 
-  // Check if user with cerdentials exisits.
+  // Check if user with credentials exists.
   const { data, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,

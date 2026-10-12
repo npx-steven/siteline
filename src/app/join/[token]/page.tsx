@@ -85,7 +85,7 @@ async function JoinPage({ params }: JoinProps) {
     return (
       <JoinLayout
         title={`Join ${companyName}`}
-        description="Create an account to request access. An owner approves each new teammate."
+        description="Create an account to request access. An owner or manager approves each new teammate."
       >
         <div className="flex flex-1 flex-col w-full pb-[max(1rem,env(safe-area-inset-bottom))]">
           <SignUpForm token={token} />
@@ -129,7 +129,7 @@ async function JoinPage({ params }: JoinProps) {
   return (
     <JoinLayout
       title={`Join ${companyName}`}
-      description="Send a request to join. You'll get access as soon as an owner approves you."
+      description="Send a request to join. You'll get access as soon as an owner or manager approves you."
     >
       <div className="mt-auto w-full pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         <RequestJoinButton token={token} />

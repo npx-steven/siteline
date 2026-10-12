@@ -10,7 +10,9 @@ type TeamMemberRow = {
   user_id: string;
   full_name: string | null;
   email: string;
+  phone: string | null;
   role: Role;
+  joined_at: string;
 };
 
 type JoinRequestRow = {
@@ -31,12 +33,15 @@ export async function loadTeamMembers(
     id: row.user_id,
     fullName: row.full_name ?? row.email,
     email: row.email,
+    phone: row.phone,
     role: row.role,
+    joinedAt: row.joined_at,
     isYou: row.user_id === userId,
   }));
 }
 
-// Pending, unexpired requests. Returns [] for anyone who isn't an owner.
+// Pending, unexpired requests. Returns [] for anyone who isn't an owner or
+// manager.
 export async function loadJoinRequests(
   supabase: SupabaseClient,
 ): Promise<JoinRequest[]> {

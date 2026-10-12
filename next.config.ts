@@ -23,7 +23,16 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // Private or form-only pages that must never appear in search results.
+    // A header (not robots.txt) so it works even if the URL is linked
+    // externally, e.g. a share link pasted into a public page.
+    const noindex = [{ key: "X-Robots-Tag", value: "noindex, nofollow" }];
+
     return [
+      { source: "/share/:path*", headers: noindex },
+      { source: "/join/:path*", headers: noindex },
+      { source: "/sign-in", headers: noindex },
+      { source: "/sign-up", headers: noindex },
       {
         source: "/(.*)",
         headers: [

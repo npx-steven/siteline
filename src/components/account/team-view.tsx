@@ -13,12 +13,14 @@ import { JoinRequest, TeamMember } from "@/types/account";
 import {
   IconCheck,
   IconChevronLeft,
+  IconChevronRight,
   IconUserPlus,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import InviteDrawer from "./invite-drawer";
+import MemberDrawer from "./member-drawer";
 
 type Tab = "members" | "requests";
 
@@ -27,6 +29,7 @@ type TeamViewProps = {
   members: TeamMember[];
   requests: JoinRequest[];
   canManageRequests: boolean;
+  canManageMembers: boolean;
   initialTab: Tab;
 };
 
@@ -35,10 +38,20 @@ function TeamView({
   members,
   requests,
   canManageRequests,
+  canManageMembers,
   initialTab,
 }: TeamViewProps) {
   const [tab, setTab] = useState<Tab>(initialTab);
   const [inviteOpen, setInviteOpen] = useState(false);
+  // Kept by id so the drawer shows fresh data after a role change revalidates.
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [memberOpen, setMemberOpen] = useState(false);
+  const selectedMember = members.find((m) => m.id === selectedId) ?? null;
+
+  function openMember(id: string) {
+    setSelectedId(id);
+    setMemberOpen(true);
+  }
 
   return (
     <main className="px-4 pb-32 h-dvh overflow-y-auto">
@@ -97,13 +110,20 @@ function TeamView({
       )}
 
       {tab === "members" ? (
-        <MembersList members={members} />
+        <MembersList members={members} onSelect={openMember} />
       ) : (
         <RequestsList
           requests={requests}
           onInvite={() => setInviteOpen(true)}
         />
       )}
+
+      <MemberDrawer
+        member={selectedMember}
+        open={memberOpen && selectedMember !== null}
+        onOpenChange={setMemberOpen}
+        canManageMembers={canManageMembers}
+      />
 
       {canManageRequests && (
         <InviteDrawer
@@ -118,13 +138,21 @@ function TeamView({
 
 // --- Members ----------------------------------------------------------------
 
-function MembersList({ members }: { members: TeamMember[] }) {
+function MembersList({
+  members,
+  onSelect,
+}: {
+  members: TeamMember[];
+  onSelect: (id: string) => void;
+}) {
   return (
     <div className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl px-4 mt-4 divide-y divide-muted-foreground/20">
       {members.map((member) => (
-        <div
+        <button
           key={member.id}
-          className="flex flex-row items-center justify-between gap-3 py-3"
+          type="button"
+          onClick={() => onSelect(member.id)}
+          className="flex flex-row items-center justify-between gap-3 py-3 text-left"
         >
           <div className="flex flex-row items-center gap-3 min-w-0">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-background">
@@ -145,10 +173,11 @@ function MembersList({ members }: { members: TeamMember[] }) {
               </p>
             </div>
           </div>
-          <Badge variant="secondary" className="shrink-0">
-            {ROLE_LABELS[member.role]}
-          </Badge>
-        </div>
+          <div className="flex flex-row items-center gap-1 shrink-0">
+            <Badge variant="secondary">{ROLE_LABELS[member.role]}</Badge>
+            <IconChevronRight className="size-4 text-muted-foreground" />
+          </div>
+        </button>
       ))}
     </div>
   );

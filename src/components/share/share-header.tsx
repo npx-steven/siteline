@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { companyFirstTwoInitals } from "@/lib/helpers";
+import { companyFirstTwoInitials } from "@/lib/helpers";
 import { IconLock, IconMapPin, IconDownload } from "@tabler/icons-react";
 import { Button } from "../ui/button";
 import Image from "next/image";
@@ -23,7 +23,7 @@ function ShareHeader({
   photoCount,
   token,
 }: ShareHeaderProps) {
-  const companyInitials = companyFirstTwoInitals(companyName);
+  const companyInitials = companyFirstTwoInitials(companyName);
   const [downloading, setDownloading] = useState(false);
 
   const handleDownloadAll = async () => {
@@ -51,7 +51,7 @@ function ShareHeader({
 
   return (
     <div>
-      {/*Top Sevure Bar*/}
+      {/*Top Secure Bar*/}
       <div className="flex flex-row items-center justify-between p-4">
         {/*Initials and Company Name*/}
         <div className="flex flex-row items-center gap-2">

@@ -211,7 +211,7 @@ export function userInitials(name: string | null | undefined): string {
   return `${first}${last}`.toUpperCase();
 }
 
-export function companyFirstTwoInitals(name: string): string {
+export function companyFirstTwoInitials(name: string): string {
   return name
     .trim()
     .split(/\s+/)
@@ -321,7 +321,7 @@ export function formatPhoneNumber(phone: string): string {
   return phone;
 }
 
-export function getGreating(): string {
+export function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Morning";
   if (hour < 18) return "Afternoon";

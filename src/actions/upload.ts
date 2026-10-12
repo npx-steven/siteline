@@ -14,7 +14,7 @@ export async function uploadMediaAction(
   const cookieStore = await cookies();
   const supabase = await createClient(cookieStore);
 
-  // Check if user is authticated
+  // Check if user is authenticated
   const user = await getAuthUser();
   if (!user) {
     return { error: "User is not authenticated." };

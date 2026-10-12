@@ -1,4 +1,4 @@
-import { getGreating } from "@/lib/helpers";
+import { getGreeting } from "@/lib/helpers";
 import { IconMapPin, IconFolder } from "@tabler/icons-react";
 
 type ProjectsHeaderProps = {
@@ -23,7 +23,7 @@ function ProjectsHeader({
   return (
     <div className="flex flex-col px-4">
       <h1 className="text-2xl font-bold text-foreground">
-        {getGreating()}
+        {getGreeting()}
         {firstName ? `, ${firstName}` : ""}
       </h1>
       <p className="flex items-center gap-1 font-medium text-sm text-muted-foreground">

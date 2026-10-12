@@ -41,6 +41,7 @@ async function TeamPage({ searchParams }: TeamPageProps) {
       members={members}
       requests={requests}
       canManageRequests={canManageRequests}
+      canManageMembers={can.manageMembers(membership.role)}
       initialTab={canManageRequests && tab === "requests" ? "requests" : "members"}
     />
   );

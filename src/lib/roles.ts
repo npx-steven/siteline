@@ -8,6 +8,13 @@ export const ROLE_LABELS: Record<Role, string> = {
   crew: "Crew",
 };
 
+// One-line summaries for the role picker. Keep in step with lib/permissions.
+export const ROLE_DESCRIPTIONS: Record<Role, string> = {
+  owner: "Full control of the company, its team and projects",
+  project_manager: "Manages projects, invites and approves new teammates",
+  crew: "Takes photos and sees the company's projects",
+};
+
 // Roles that can be granted through a join link or request. Ownership is only
 // ever transferred, never granted on join.
 export type GrantableRole = Exclude<Role, "owner">;

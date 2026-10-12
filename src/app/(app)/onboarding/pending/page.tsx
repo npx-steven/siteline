@@ -74,7 +74,8 @@ async function OnboardingPendingPage() {
               <span className="font-semibold text-foreground">
                 {request.company_name}
               </span>
-              . You&apos;ll get access as soon as an owner approves you.
+              . You&apos;ll get access as soon as an owner or manager
+              approves you.
             </>
           )}
         </p>

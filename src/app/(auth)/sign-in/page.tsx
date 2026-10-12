@@ -28,7 +28,7 @@ async function SignInPage({
       </div>
       {/* Header */}
       <div className="flex flex-col items-start my-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Weclome Back</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
         <p className="text-sm font-normal text-muted-foreground tracking-tight ">
           Enter your details to sign in.
         </p>

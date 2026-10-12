@@ -14,8 +14,8 @@ import { IconLink } from "@tabler/icons-react";
 const STEPS = [
   {
     n: 1,
-    title: "Ask the owner for a link",
-    body: "Whoever set up your company in Siteline can send you a join link.",
+    title: "Ask for a link",
+    body: "An owner or manager at your company can send you a join link.",
   },
   {
     n: 2,
@@ -25,7 +25,7 @@ const STEPS = [
   {
     n: 3,
     title: "Get approved",
-    body: "Create your account and send a request. Once the owner approves you, you're in.",
+    body: "Create your account and send a request. Once an owner or manager approves you, you're in.",
   },
 ];
 
@@ -50,7 +50,7 @@ export function JoinTeamDrawer() {
             Joining a team?
           </DrawerTitle>
           <DrawerDescription className="mt-2 text-base text-muted-foreground text-pretty">
-            Siteline companies are invite-only. Ask your company&apos;s owner
+            Siteline companies are invite-only. Ask an owner or manager
             for a join link, then request access. They approve each new
             teammate.
           </DrawerDescription>
