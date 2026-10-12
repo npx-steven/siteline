@@ -40,6 +40,8 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-skeleton: var(--skeleton);
+  --color-skeleton-highlight: var(--skeleton-highlight);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -77,6 +79,10 @@
   --accent-foreground: #0a0a0a;
   --destructive: oklch(0.577 0.245 27.325);
   --border: #e5e5e5; /* all borders, inputs, dividers */
+  /* Loading placeholders — a step darker than borders and the neutral-200
+     segmented controls so the shapes read clearly on white. */
+  --skeleton: #e0e0e0;
+  --skeleton-highlight: rgb(255 255 255 / 0.65);
   --input: #e5e5e5;
   --ring: #0a0a0a;
   --radius: 0.625rem;
@@ -113,6 +119,8 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
+  --skeleton: oklch(0.3 0 0);
+  --skeleton-highlight: rgb(255 255 255 / 0.08);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -138,5 +146,56 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* Skeleton placeholders: a solid block with a highlight band that sweeps
+   left to right. The band rides a transform, so it animates on the compositor
+   without repainting. A loading screen mounts its blocks together, so they
+   sweep in unison. */
+@layer components {
+  [data-slot="skeleton"] {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background-color: var(--skeleton);
+    /* A fast load swaps the page in before the placeholders appear, instead
+       of flashing them for a frame or two. */
+    animation: skeleton-fade-in 200ms ease-out 120ms both;
+  }
+
+  [data-slot="skeleton"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      var(--skeleton-highlight) 50%,
+      transparent 100%
+    );
+    animation: skeleton-sweep 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-slot="skeleton"] {
+      animation: none;
+    }
+    [data-slot="skeleton"]::after {
+      display: none;
+    }
+  }
+}
+
+@keyframes skeleton-sweep {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-fade-in {
+  from {
+    opacity: 0;
   }
 }
