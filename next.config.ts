@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
       { source: "/join/:path*", headers: noindex },
       { source: "/sign-in", headers: noindex },
       { source: "/sign-up", headers: noindex },
+      { source: "/forgot-password", headers: noindex },
+      { source: "/reset-password", headers: noindex },
       {
         source: "/(.*)",
         headers: [

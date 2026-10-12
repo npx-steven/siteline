@@ -1,9 +1,16 @@
 "use server";
 
+import { getAuthUser } from "@/lib/auth";
+import { SITE_URL } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
-import { signInSchema, signUpSchema } from "@/lib/validators/auth";
+import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  signInSchema,
+  signUpSchema,
+} from "@/lib/validators/auth";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type AuthActionResult = {
@@ -93,6 +100,88 @@ export async function signInAction(
   if (!data.user) {
     return { error: "Sign in failed. Please try again." };
   }
+  return { error: null };
+}
+
+export async function requestPasswordResetAction(
+  formData: FormData,
+): Promise<AuthActionResult> {
+  const parseData = forgotPasswordSchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!parseData.success) {
+    return { error: parseData.error.issues[0].message };
+  }
+
+  // The link must come back to whichever deployment sent it (localhost,
+  // preview or production). Supabase only honours redirect URLs on its allow
+  // list, so a spoofed Origin can't send the link anywhere else.
+  const origin = (await headers()).get("origin") ?? SITE_URL;
+  if (!origin) {
+    return { error: "Couldn't send the reset email. Try again." };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parseData.data.email,
+    { redirectTo: `${origin}/auth/confirm` },
+  );
+
+  // Supabase reports success for unknown emails too, so the reply never
+  // reveals whether an account exists. Rate limiting is the one error worth
+  // explaining, since retrying straight away won't help.
+  if (error) {
+    if (error.status === 429) {
+      return {
+        error: "Too many reset emails. Wait a few minutes and try again.",
+      };
+    }
+    return { error: "Couldn't send the reset email. Try again." };
+  }
+
+  return { error: null };
+}
+
+// Runs on the session created by the reset link (see app/auth/confirm).
+export async function updatePasswordAction(
+  formData: FormData,
+): Promise<AuthActionResult> {
+  const parseData = resetPasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirm_password: formData.get("confirm_password"),
+  });
+  if (!parseData.success) {
+    return { error: parseData.error.issues[0].message };
+  }
+
+  const user = await getAuthUser();
+  if (!user) {
+    return { error: "Your reset link has expired. Request a new one." };
+  }
+
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  const { error } = await supabase.auth.updateUser({
+    password: parseData.data.password,
+  });
+
+  if (error) {
+    if (error.code === "same_password") {
+      return { error: "Choose a password you haven't used before." };
+    }
+    if (error.code === "weak_password") {
+      return { error: error.message };
+    }
+    return { error: "Couldn't update your password. Try again." };
+  }
+
+  // A reset usually means the old password can't be trusted, so end every
+  // other session — including one someone else may have opened with it.
+  await supabase.auth.signOut({ scope: "others" });
+
   return { error: null };
 }
 

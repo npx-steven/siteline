@@ -30,14 +30,23 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  const publicRoutes = ["/", "/sign-in", "/sign-up"];
+  const publicRoutes = ["/", "/sign-in", "/sign-up", "/forgot-password"];
   const isPublic =
     publicRoutes.includes(path) ||
+    path.startsWith("/auth/") ||
     path.startsWith("/join") ||
     path.startsWith("/share");
 
   // 1. Public route → let through
   if (isPublic) return supabaseResponse;
+
+  // The reset form runs on the session the email link just created. It needs
+  // a user but not a company — someone mid-onboarding can forget theirs too.
+  if (path === "/reset-password") {
+    return user
+      ? supabaseResponse
+      : NextResponse.redirect(new URL("/forgot-password?expired=1", request.url));
+  }
 
   // 2. No user → redirect to landing
   if (!user) {

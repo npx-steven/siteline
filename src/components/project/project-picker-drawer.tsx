@@ -44,6 +44,7 @@ type ProjectPickerDrawerProps = {
   capturedFile: File | null;
   onSelect: (projectId: string) => void;
   onCreateNew: () => void;
+  onDiscard: () => void;
 };
 
 function ProjectPickerDrawer({
@@ -54,6 +55,7 @@ function ProjectPickerDrawer({
   capturedFile,
   onSelect,
   onCreateNew,
+  onDiscard,
 }: ProjectPickerDrawerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +85,12 @@ function ProjectPickerDrawer({
     setSelectedId(null);
     setSearchQuery("");
     onCreateNew();
+  };
+
+  const handleDiscard = () => {
+    setSelectedId(null);
+    setSearchQuery("");
+    onDiscard();
   };
 
   const selectedProject =
@@ -133,7 +141,14 @@ function ProjectPickerDrawer({
   };
 
   return (
-    <Drawer open={open} onOpenChange={handleOpenChange} direction="bottom">
+    // Not dismissible: a swipe or backdrop tap would drop the photo with no
+    // trace. Leaving takes a project or an explicit Discard.
+    <Drawer
+      open={open}
+      onOpenChange={handleOpenChange}
+      direction="bottom"
+      dismissible={false}
+    >
       <DrawerContent
         className="rounded-t-3xl bg-background flex flex-col overflow-hidden max-h-[80dvh]"
         aria-describedby={undefined}
@@ -395,6 +410,13 @@ function ProjectPickerDrawer({
               Create New Project
             </button>
           )}
+          <Button
+            variant="ghost"
+            onClick={handleDiscard}
+            className="mt-1 w-full rounded-full text-muted-foreground"
+          >
+            Discard Photo
+          </Button>
         </div>
       </DrawerContent>
     </Drawer>

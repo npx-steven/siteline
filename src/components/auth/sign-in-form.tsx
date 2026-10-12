@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import { Field, FieldError, FieldLabel } from "../ui/field";
 import { signInAction } from "@/actions/auth";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,6 +105,14 @@ function SignInForm({ next }: { next?: string }) {
                 {fieldState.error.message}
               </FieldError>
             )}
+            <Button
+              asChild
+              size="xs"
+              variant="link"
+              className="justify-end px-0 text-muted-foreground"
+            >
+              <Link href="/forgot-password">Forgot password?</Link>
+            </Button>
           </Field>
         )}
       />

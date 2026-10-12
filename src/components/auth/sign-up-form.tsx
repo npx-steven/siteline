@@ -1,7 +1,7 @@
 "use client";
 
 import { type SignUpFormValues, signUpSchema } from "@/lib/validators/auth";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +10,6 @@ import {
   IconMail,
   IconArrowRight,
   IconLock,
-  IconCircleCheckFilled,
-  IconCircle,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +21,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "../ui/input-group";
-import { cn } from "@/lib/utils";
+import PasswordRules from "./password-rules";
 
 type SignUpFormProps = {
   token?: string;
@@ -72,14 +70,7 @@ function SignUpForm({ token }: SignUpFormProps) {
     router.push("/onboarding/company");
   }
 
-  const pwd = form.watch("password") ?? "";
-
-  const rules = [
-    { label: "At least 8 characters", met: pwd.length >= 8 },
-    { label: "At least 1 uppercase letter (A–Z)", met: /[A-Z]/.test(pwd) },
-    { label: "At least 1 number (0–9)", met: /[0-9]/.test(pwd) },
-    { label: "At least 1 special character (!@#$…)", met: /[^\w\s]/.test(pwd) },
-  ];
+  const pwd = useWatch({ control: form.control, name: "password" }) ?? "";
 
   return (
     <form
@@ -184,34 +175,7 @@ function SignUpForm({ token }: SignUpFormProps) {
             </Field>
           )}
         />
-        {pwd.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-4">
-            <ul className="space-y-2 text-xs">
-              {rules.map((r) => (
-                <li
-                  key={r.label}
-                  className={cn(
-                    "flex items-center gap-2 transition-colors",
-                    r.met ? "text-foreground" : "text-muted-foreground",
-                  )}
-                >
-                  {r.met ? (
-                    <IconCircleCheckFilled
-                      size={18}
-                      className="text-foreground"
-                    />
-                  ) : (
-                    <IconCircle
-                      size={18}
-                      className="text-muted-foreground/40"
-                    />
-                  )}
-                  {r.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <PasswordRules password={pwd} />
       </section>
 
       {serverError && <p className="text-sm text-destructive">{serverError}</p>}
