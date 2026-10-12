@@ -36,7 +36,7 @@ export async function generateShareLink(
 
   const membership = await getActiveMembership(supabase);
   if (!membership || !can.sharePhotos(membership.role)) {
-    return { ok: false, error: "Only owners and project managers can share" };
+    return { ok: false, error: "Only owners and managers can share" };
   }
 
   //Confirm the project is connect to the user

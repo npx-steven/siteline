@@ -1,4 +1,5 @@
 import { userInitials } from "@/lib/helpers";
+import { ROLE_LABELS } from "@/lib/roles";
 import { Profile } from "@/types/account";
 import React from "react";
 import { Button } from "../ui/button";
@@ -6,9 +7,11 @@ import { IconEdit } from "@tabler/icons-react";
 
 function AccountHeader({
   profile,
+  companyName,
   onEdit,
 }: {
   profile: Profile;
+  companyName: string;
   onEdit: () => void;
 }) {
   return (
@@ -22,7 +25,7 @@ function AccountHeader({
             {profile.fullName}
           </div>
           <div className="text-sm text-muted-foreground tracking-tight">
-            {profile.email}
+            {ROLE_LABELS[profile.role]} · {companyName}
           </div>
         </div>
       </div>

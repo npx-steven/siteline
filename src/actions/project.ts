@@ -91,7 +91,7 @@ export async function editProjectAction(
   const membership = await getActiveMembership(supabase);
   if (!membership) return { error: "No company found" };
   if (!can.manageProject(membership.role))
-    return { error: "Only owners and project managers can edit this project" };
+    return { error: "Only owners and managers can edit this project" };
 
   const parsed = editProjectSchema.safeParse({
     project_name: formData.get("project_name") ?? "",
@@ -141,7 +141,7 @@ export async function deleteProjectAction(
   const membership = await getActiveMembership(supabase);
   if (!membership) return { error: "No company found" };
   if (!can.manageProject(membership.role))
-    return { error: "Only owners and project managers can delete a project" };
+    return { error: "Only owners and managers can delete a project" };
 
   // Scope the lookup to the caller's company. A bare id lookup would let any
   // authenticated user wipe another company's project and its storage.

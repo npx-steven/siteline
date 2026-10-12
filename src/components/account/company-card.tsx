@@ -1,3 +1,5 @@
+import { userInitials } from "@/lib/helpers";
+import { can } from "@/lib/permissions";
 import { Company } from "@/types/account";
 import { Role } from "@/types/db";
 import {
@@ -6,8 +8,9 @@ import {
   IconLicense,
   IconPlus,
   IconUserPlus,
+  IconUsers,
 } from "@tabler/icons-react";
-import { Badge } from "../ui/badge";
+import Link from "next/link";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 
@@ -15,26 +18,26 @@ type CompanyCardProps = {
   company: Company;
   role: Role;
   memberCount: number;
-  projectCount: number;
+  memberNames: string[];
+  requestCount: number;
   onEdit: () => void;
   onInvite: () => void;
 };
 
-const ROLE_LABELS: Record<Role, string> = {
-  owner: "Owner",
-  project_manager: "PM",
-  crew: "Crew",
-};
+const AVATAR_STACK_SIZE = 4;
 
 function CompanyCard({
   company,
   role,
   memberCount,
-  projectCount,
+  memberNames,
+  requestCount,
   onEdit,
   onInvite,
 }: CompanyCardProps) {
-  const canEdit = role === "owner";
+  const canEdit = can.editCompany(role);
+  const canInvite = can.manageInvites(role);
+
   return (
     <main className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl p-4 mt-8">
       <div className="flex flex-row items-start justify-between gap-3 ">
@@ -43,30 +46,26 @@ function CompanyCard({
             <IconBuilding className="size-6" />
           </div>
           <div className="flex w-0 flex-1 flex-col items-start justify-center overflow-hidden">
-            <div className="flex w-full items-center gap-2 min-w-0">
-              <p className="text-base tracking-tight font-bold truncate capitalize">
-                {company.name}
-              </p>
-              <Badge variant="secondary" className="shrink-0">
-                {ROLE_LABELS[role]}
-              </Badge>
-            </div>
+            <p className="w-full text-base tracking-tight font-bold truncate capitalize">
+              {company.name}
+            </p>
             {company.license_number ? (
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <IconLicense className="size-4" />
                 <span>{company.license_number}</span>
               </div>
             ) : (
-              <Button
-                variant="outline"
-                size="xs"
-                className="rounded-full bg-card border-dashed border-foreground/30 mt-1 h-5 px-1.5 gap-1 text-[10px] [&_svg]:size-2.5"
-                onClick={onEdit}
-                disabled={!canEdit}
-              >
-                <IconPlus />
-                Add license number
-              </Button>
+              canEdit && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  className="rounded-full bg-card border-dashed border-foreground/30 mt-1 h-5 px-1.5 gap-1 text-[10px] [&_svg]:size-2.5"
+                  onClick={onEdit}
+                >
+                  <IconPlus />
+                  Add license number
+                </Button>
+              )
             )}
           </div>
         </div>
@@ -83,31 +82,59 @@ function CompanyCard({
           </Button>
         )}
       </div>
+
       <Separator className="my-4" />
-      <div className="flex flex-row items-stretch">
-        <div className="flex-1 flex flex-col items-start justify-center">
-          <span className="text-2xl font-semibold tracking-tight">
-            {memberCount}
-          </span>
-          <p className="text-xs font-medium text-muted-foreground">Members</p>
+
+      <div className="flex flex-row items-center justify-between gap-3">
+        <div className="flex flex-row items-center gap-3 min-w-0">
+          <div className="flex -space-x-2 shrink-0">
+            {memberNames.slice(0, AVATAR_STACK_SIZE).map((name, i) => (
+              <div
+                key={`${name}-${i}`}
+                className="flex size-8 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background ring-2 ring-card"
+              >
+                {userInitials(name)}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground truncate">
+            {memberCount} {memberCount === 1 ? "member" : "members"}
+          </p>
         </div>
-        <Separator orientation="vertical" className="mx-4" />
-        <div className="flex-1 flex flex-col items-start justify-center">
-          <span className="text-2xl font-semibold tracking-tight">
-            {projectCount}
-          </span>
-          <p className="text-xs font-medium text-muted-foreground">Projects</p>
-        </div>
+
+        {canInvite && requestCount > 0 && (
+          <Link
+            href="/account/team?tab=requests"
+            className="shrink-0 rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background"
+          >
+            {requestCount} {requestCount === 1 ? "request" : "requests"}
+          </Link>
+        )}
       </div>
-      <Button
-        className="w-full rounded-full text-base py-6 mt-6 font-semibold tracking-tight gap-2"
-        size="lg"
-        onClick={onInvite}
-        disabled={!canEdit}
-      >
-        <IconUserPlus stroke={2} className="size-5" data-icon="inline-start" />
-        Invite Teammates
-      </Button>
+
+      <div className="flex flex-row gap-2 mt-5">
+        {canInvite && (
+          <Button
+            className="flex-1 rounded-full text-base py-6 font-semibold tracking-tight gap-2"
+            size="lg"
+            onClick={onInvite}
+          >
+            <IconUserPlus stroke={2} className="size-5" data-icon="inline-start" />
+            Invite
+          </Button>
+        )}
+        <Button
+          asChild
+          variant="outline"
+          size="lg"
+          className="flex-1 rounded-full text-base py-6 font-semibold tracking-tight gap-2 bg-card"
+        >
+          <Link href="/account/team">
+            <IconUsers stroke={2} className="size-5" data-icon="inline-start" />
+            View Team
+          </Link>
+        </Button>
+      </div>
     </main>
   );
 }

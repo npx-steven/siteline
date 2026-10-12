@@ -55,10 +55,15 @@ export async function updateSession(request: NextRequest) {
     .maybeSingle();
 
   if (!membership) {
-    // No company yet — only /onboarding/company is valid; everything
-    // else (including /onboarding/welcome) sends them back to create one.
-    if (path !== "/onboarding/company") {
-      return NextResponse.redirect(new URL("/onboarding/company", request.url));
+    // No company yet — they can be waiting on a join request or naming
+    // their own company. Anywhere else (including /onboarding/welcome) sends
+    // them to whichever applies.
+    if (path !== "/onboarding/company" && path !== "/onboarding/pending") {
+      const { data: joinRequest } = await supabase
+        .rpc("get_my_join_request")
+        .maybeSingle();
+      const target = joinRequest ? "/onboarding/pending" : "/onboarding/company";
+      return NextResponse.redirect(new URL(target, request.url));
     }
   } else {
     // 5. Has company + hitting onboarding → bounce to projects,

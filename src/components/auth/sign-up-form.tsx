@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { signUpAction } from "@/actions/auth";
-import { joinCompanyAction } from "@/actions/invite";
+import { requestToJoinAction } from "@/actions/join";
 import {
   InputGroup,
   InputGroupAddon,
@@ -57,13 +57,15 @@ function SignUpForm({ token }: SignUpFormProps) {
     }
 
     if (token) {
-      const joinResult = await joinCompanyAction(token);
+      // The account exists now, so a failed request (say the link was reset
+      // meanwhile) still leaves them signed in; onboarding picks up from there.
+      const joinResult = await requestToJoinAction(token);
       if (joinResult.error) {
         setServerError(joinResult.error);
         setIsLoading(false);
         return;
       }
-      router.push("/onboarding/welcome");
+      router.push("/onboarding/pending");
       return;
     }
 

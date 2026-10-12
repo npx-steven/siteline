@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { IconChevronLeft } from "@tabler/icons-react";
 import Link from "next/link";
 
-function SignInPage() {
+async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+
   return (
     <main className="flex flex-col h-dvh px-6 ">
       {/* Back Button */}
@@ -28,7 +34,7 @@ function SignInPage() {
         </p>
       </div>
       <div className="w-full">
-        <SignInForm />
+        <SignInForm next={next} />
       </div>
       <div className="mt-auto w-full pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         <div className="flex flex-row items-center justify-center">

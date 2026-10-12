@@ -20,7 +20,7 @@ function ContactInfo({
 
   return (
     <main className="flex flex-col gap-2 mt-8">
-      <h1 className="uppercase text-xs text-muted-foreground">Contact</h1>
+      <h1 className="uppercase text-xs text-muted-foreground">Account</h1>
       <div className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl px-4 divide-y divide-muted-foreground/20">
         <Row icon={<IconMail className="size-4" />} label="Email">
           <span className="text-sm text-muted-foreground truncate">

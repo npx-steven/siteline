@@ -15,7 +15,7 @@ const STEPS = [
   {
     n: 1,
     title: "Ask the owner for a link",
-    body: "Whoever set up your company in Siteline can send you an invite link.",
+    body: "Whoever set up your company in Siteline can send you a join link.",
   },
   {
     n: 2,
@@ -24,8 +24,8 @@ const STEPS = [
   },
   {
     n: 3,
-    title: "You're in",
-    body: "You'll set up your account and join their company automatically.",
+    title: "Get approved",
+    body: "Create your account and send a request. Once the owner approves you, you're in.",
   },
 ];
 
@@ -50,8 +50,9 @@ export function JoinTeamDrawer() {
             Joining a team?
           </DrawerTitle>
           <DrawerDescription className="mt-2 text-base text-muted-foreground text-pretty">
-            Siteline companies are invite-only. You don&apos;t create an account
-            to join. You use a link from your company&apos;s owner.
+            Siteline companies are invite-only. Ask your company&apos;s owner
+            for a join link, then request access. They approve each new
+            teammate.
           </DrawerDescription>
 
           {/* steps */}

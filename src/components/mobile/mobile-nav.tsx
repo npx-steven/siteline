@@ -90,14 +90,14 @@ export default function MobileNav({
           href="/account"
           className="flex flex-col items-center gap-1 min-w-16"
         >
-          {pathname === "/account" ? (
+          {pathname.startsWith("/account") ? (
             <IconUserFilled size={24} className="text-foreground" />
           ) : (
             <IconUser size={24} className="text-muted-foreground" />
           )}
           <span
             className={`text-xs font-medium ${
-              pathname === "/account"
+              pathname.startsWith("/account")
                 ? "text-foreground"
                 : "text-muted-foreground"
             }`}

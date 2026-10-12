@@ -15,7 +15,13 @@ import {
 } from "../ui/input-group";
 import { IconMail, IconLock, IconAlertCircle } from "@tabler/icons-react";
 
-function SignInForm() {
+// Only join links may be resumed after sign-in, so ?next= can't be used to
+// send someone to an arbitrary (or external) URL.
+function safeNext(next: string | undefined): string {
+  return next && /^\/join\/[\w-]+$/.test(next) ? next : "/projects";
+}
+
+function SignInForm({ next }: { next?: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +43,7 @@ function SignInForm() {
       setIsLoading(false);
       return;
     }
-    router.push("/projects");
+    router.push(safeNext(next));
   }
 
   return (

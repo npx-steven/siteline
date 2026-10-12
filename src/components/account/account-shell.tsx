@@ -11,7 +11,7 @@ import InviteDrawer from "./invite-drawer";
 import SignOutButton from "../auth/sign-out-button";
 
 function AccountShell({ data }: { data: AccountData }) {
-  const { profile, company, counts, team } = data;
+  const { profile, company, members, requestCount } = data;
   const [editAccountOpen, setEditAccountOpen] = useState(false);
   const [editCompanyOpen, setEditCompanyOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -24,14 +24,19 @@ function AccountShell({ data }: { data: AccountData }) {
     <main className="px-4 pb-32 h-dvh overflow-y-auto">
       <h1 className="text-3xl font-bold tracking-tight py-6">Account</h1>
       <div>
-        <AccountHeader profile={profile} onEdit={openEditAccount} />
+        <AccountHeader
+          profile={profile}
+          companyName={company.name}
+          onEdit={openEditAccount}
+        />
       </div>
       <div>
         <CompanyCard
           company={company}
           role={profile.role}
-          memberCount={counts.members}
-          projectCount={counts.projects}
+          memberCount={members.count}
+          memberNames={members.names}
+          requestCount={requestCount}
           onEdit={openEditCompany}
           onInvite={openInvite}
         />
@@ -58,7 +63,6 @@ function AccountShell({ data }: { data: AccountData }) {
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         companyName={company.name}
-        team={team}
       />
     </main>
   );
