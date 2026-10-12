@@ -8,11 +8,8 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { checkUploadSize, getCurrentPosition } from "@/lib/helpers";
-import {
-  PhotoOrigin,
-  PhotoUploadMeta,
-  readPhotoMetadata,
-} from "@/lib/photo-metadata";
+import { PhotoOrigin, PhotoUploadMeta } from "@/lib/photo-metadata";
+import { preparePhotoUpload } from "@/lib/photo-upload";
 import { toast } from "sonner";
 
 import {
@@ -54,27 +51,34 @@ function AddMediaDrawer({
 
       const label = bucket === "photos" ? "Photo" : "Document";
 
-      const sizeError = checkUploadSize(file);
-      if (sizeError) {
-        toast.error(`${label} is too large`, { description: sizeError });
-        return;
-      }
-
       setIsUploading(true);
       const toastId = toast.loading(`Uploading ${label.toLowerCase()}…`);
 
-      // Device GPS only stands in for a fresh camera capture. A camera-roll
-      // pick without EXIF GPS uploads with no location rather than wherever
-      // the phone happens to be now.
-      const meta: PhotoUploadMeta | null =
-        bucket === "photos"
-          ? await readPhotoMetadata(file, {
-              origin,
-              getDeviceLocation: () => getCurrentPosition().catch(() => null),
-            })
-          : null;
+      // Photos are shrunk on the device first. Device GPS only stands in for
+      // a fresh camera capture: a camera-roll pick without EXIF GPS uploads
+      // with no location rather than wherever the phone happens to be now.
+      let upload = file;
+      let meta: PhotoUploadMeta | null = null;
+      if (bucket === "photos") {
+        ({ file: upload, meta } = await preparePhotoUpload(file, {
+          origin,
+          getDeviceLocation: () => getCurrentPosition().catch(() => null),
+        }));
+      }
 
-      const { error } = await uploadMediaAction(file, bucket, projectId, meta);
+      // Checked after resizing, so a large camera original that shrinks
+      // under the limit still goes through.
+      const sizeError = checkUploadSize(upload);
+      if (sizeError) {
+        setIsUploading(false);
+        toast.error(`${label} is too large`, {
+          id: toastId,
+          description: sizeError,
+        });
+        return;
+      }
+
+      const { error } = await uploadMediaAction(upload, bucket, projectId, meta);
 
       setIsUploading(false);
 

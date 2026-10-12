@@ -13,7 +13,8 @@ import {
   getAllProjectsAction,
 } from "@/actions/location";
 import { uploadMediaAction } from "@/actions/upload";
-import { readPhotoMetadata } from "@/lib/photo-metadata";
+import type { PhotoUploadMeta } from "@/lib/photo-metadata";
+import { preparePhotoUpload } from "@/lib/photo-upload";
 import type { Coordinates } from "@/types/location";
 import {
   NavVisibilityProvider,
@@ -43,7 +44,7 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const [capturedFile, setCapturedFile] = useState<File | null>(null);
 
   const pendingFileRef = useRef<File | null>(null);
-  const pendingCoordsRef = useRef<Coordinates | null>(null);
+  const pendingMetaRef = useRef<PhotoUploadMeta | null>(null);
   const gpsRef = useRef<Promise<Coordinates | null> | null>(null);
 
   const handleCameraButtonPress = () => {
@@ -54,16 +55,10 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   // mistaken for success by navigating to a project with no photo.
   const uploadCapturedPhoto = async (
     file: File,
+    meta: PhotoUploadMeta | null,
     projectId: string,
-    coords: Coordinates | null,
   ): Promise<boolean> => {
     const toastId = toast.loading("Saving photo…");
-    // The FAB always captures fresh, so the GPS fix taken at button press
-    // describes the photo when its own EXIF has none.
-    const meta = await readPhotoMetadata(file, {
-      origin: "camera",
-      getDeviceLocation: async () => coords,
-    });
     const { error } = await uploadMediaAction(file, "photos", projectId, meta);
 
     if (error) {
@@ -75,18 +70,29 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
     return true;
   };
 
-  const handleCameraCapture = async (file: File) => {
-    // Reject oversized files up front — Vercel would 413 the action anyway,
-    // and the user should hear it before picking a project.
+  const handleCameraCapture = async (capture: File) => {
+    const gps = gpsRef.current ?? Promise.resolve(null);
+    gpsRef.current = null;
+
+    // Shrink the photo and read its metadata while the GPS fix settles. The
+    // FAB always captures fresh, so the fix taken at button press describes
+    // the photo when its own EXIF has none.
+    const [{ file, meta }, coords] = await Promise.all([
+      preparePhotoUpload(capture, {
+        origin: "camera",
+        getDeviceLocation: () => gps,
+      }),
+      gps,
+    ]);
+
+    // Reject oversized files before the user picks a project — Vercel would
+    // 413 the action anyway. Checked after resizing, so most originals pass.
     const sizeError = checkUploadSize(file);
     if (sizeError) {
-      gpsRef.current = null;
       toast.error("Photo is too large", { description: sizeError });
       return;
     }
-
-    const coords = await (gpsRef.current ?? Promise.resolve(null));
-    gpsRef.current = null;
+    pendingMetaRef.current = meta;
 
     if (!coords) {
       // GPS failed entirely — fall back to a searchable list of all
@@ -100,7 +106,6 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
       }
 
       pendingFileRef.current = file;
-      pendingCoordsRef.current = null;
       setPickerProjects(allProjects);
       setPickerCoords(null);
       setCapturedFile(file);
@@ -112,18 +117,15 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 
     if (error || !matches) {
       pendingFileRef.current = file;
-      pendingCoordsRef.current = coords;
       setSheetOpen(true);
       return;
     }
 
     if (matches.length === 0) {
       pendingFileRef.current = file;
-      pendingCoordsRef.current = coords;
       setSheetOpen(true);
     } else {
       pendingFileRef.current = file;
-      pendingCoordsRef.current = coords;
       setPickerProjects(matches);
       setPickerCoords(coords);
       setCapturedFile(file);
@@ -134,14 +136,14 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
   const handleProjectPicked = async (projectId: string) => {
     setPickerOpen(false);
     const file = pendingFileRef.current;
-    const coords = pendingCoordsRef.current;
+    const meta = pendingMetaRef.current;
     if (!file) return;
 
-    const ok = await uploadCapturedPhoto(file, projectId, coords);
+    const ok = await uploadCapturedPhoto(file, meta, projectId);
     if (!ok) return; // keep the file pending so the user can retry
 
     pendingFileRef.current = null;
-    pendingCoordsRef.current = null;
+    pendingMetaRef.current = null;
     router.push(`/projects/${projectId}`);
   };
 
@@ -152,14 +154,14 @@ function AppLayoutInner({ children }: { children: React.ReactNode }) {
 
   const handleProjectCreated = async (projectId: string) => {
     const file = pendingFileRef.current;
-    const coords = pendingCoordsRef.current;
+    const meta = pendingMetaRef.current;
     if (!file) return;
 
-    const ok = await uploadCapturedPhoto(file, projectId, coords);
+    const ok = await uploadCapturedPhoto(file, meta, projectId);
     if (!ok) return; // project exists; the photo can be retried from its page
 
     pendingFileRef.current = null;
-    pendingCoordsRef.current = null;
+    pendingMetaRef.current = null;
     router.push(`/projects/${projectId}`);
   };
 

@@ -78,8 +78,8 @@ function ProjectHero({
             src={coverPhotoUrl}
             alt="Project cover photo"
             fill
+            sizes="(max-width: 512px) 100vw, 512px"
             className="object-cover"
-            loading="eager"
             priority
           />
           <div className="absolute inset-0 bg-black/20" />

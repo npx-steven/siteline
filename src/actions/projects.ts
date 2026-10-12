@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 
 // Stars are per user, held in project_stars — not a shared flag on the project.
 // RLS ("project_stars: insert own" / "delete own") is the whole authorization

@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/actions/auth";
+import { getAuthUser } from "@/lib/auth";
 import SignUpForm from "@/components/auth/sign-up-form";
 import RequestJoinButton from "@/components/onboarding/request-join-button";
 import { Button } from "@/components/ui/button";

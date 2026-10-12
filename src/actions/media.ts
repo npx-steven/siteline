@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 import { PHOTO_NOTE_MAX_LENGTH } from "@/lib/helpers";
 
 type Bucket = "photos" | "documents";

@@ -69,9 +69,9 @@ export function ProjectCard({
           src={thumbnailUrl}
           alt={name}
           fill
-          sizes="100vw"
+          // The app column caps at max-w-lg (512px), minus p-4 padding.
+          sizes="(max-width: 512px) 100vw, 480px"
           className="object-cover"
-          loading="eager"
           priority={priority}
         />
       ) : (

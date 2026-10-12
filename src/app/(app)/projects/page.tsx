@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/actions/auth";
+import { getAuthUser } from "@/lib/auth";
 import ProjectsView from "@/components/project/projects-view";
 import { createClient } from "@/lib/supabase/server";
 import { signPhotoUrls } from "@/lib/supabase/storage";

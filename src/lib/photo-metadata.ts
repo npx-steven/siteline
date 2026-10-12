@@ -14,11 +14,13 @@ export type PhotoUploadMeta = {
 // later and miles away — only the file's own EXIF can be trusted.
 export type PhotoOrigin = "camera" | "library";
 
-type ReadPhotoMetadataOptions = {
+export type ReadPhotoMetadataOptions = {
   origin: PhotoOrigin;
   // Called only for camera captures whose file carries no EXIF GPS — so a
   // geotagged photo never waits on a GPS fix.
   getDeviceLocation?: () => Promise<Coordinates | null>;
+  // Already known (e.g. from resizing the photo) — skips decoding it again.
+  dimensions?: { width: number; height: number } | null;
 };
 
 // Reads when/where a photo was taken and its display size, on the device,
@@ -26,11 +28,11 @@ type ReadPhotoMetadataOptions = {
 // a file with stripped EXIF still uploads, just with less metadata.
 export async function readPhotoMetadata(
   file: File,
-  { origin, getDeviceLocation }: ReadPhotoMetadataOptions,
+  { origin, getDeviceLocation, dimensions: knownDimensions }: ReadPhotoMetadataOptions,
 ): Promise<PhotoUploadMeta> {
   const [exif, dimensions] = await Promise.all([
     readExif(file),
-    readDimensions(file),
+    knownDimensions ?? readDimensions(file),
   ]);
 
   let location = exif.location;

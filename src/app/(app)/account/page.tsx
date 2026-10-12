@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/actions/auth";
+import { getAuthUser } from "@/lib/auth";
 import AccountShell from "@/components/account/account-shell";
 import { getActiveMembership } from "@/lib/membership";
 import { can } from "@/lib/permissions";

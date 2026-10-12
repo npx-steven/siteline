@@ -6,7 +6,7 @@ import {
   editCompanySchema,
 } from "@/lib/validators/company";
 import { cookies } from "next/headers";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getActiveMembership } from "@/lib/membership";
 import { can } from "@/lib/permissions";

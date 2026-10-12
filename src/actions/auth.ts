@@ -104,12 +104,3 @@ export async function signOutAction() {
   revalidatePath("/", "layout");
   redirect("/");
 }
-
-export async function getAuthUser() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}

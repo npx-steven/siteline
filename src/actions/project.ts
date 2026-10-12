@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 import {
   createProjectSchema,
   editProjectSchema,

@@ -74,7 +74,7 @@ function PhotoGrid({
                       src={photo.url}
                       alt={`Photo uploaded by ${photo.uploaded_by_name ?? "unknown"}`}
                       fill
-                      sizes="25vw"
+                      sizes="(max-width: 512px) 25vw, 128px"
                       draggable={false}
                       className="object-cover"
                     />

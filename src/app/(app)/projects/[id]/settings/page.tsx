@@ -3,7 +3,7 @@ import ProjectSettingsActions from "@/components/project/settings/project-settin
 import ProjectSettingsDangerZone from "@/components/project/settings/project-settings-danger-zone";
 import ProjectSettingsHeader from "@/components/project/settings/project-settings-header";
 import ProjectSettingsStats from "@/components/project/settings/project-settings-stats";
-import { getAuthUser } from "@/actions/auth";
+import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getActiveMembership } from "@/lib/membership";
 import { can } from "@/lib/permissions";

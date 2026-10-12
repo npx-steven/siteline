@@ -1,4 +1,4 @@
-import { getAuthUser } from "@/actions/auth";
+import { getAuthUser } from "@/lib/auth";
 import TeamView from "@/components/account/team-view";
 import { getActiveMembership } from "@/lib/membership";
 import { can } from "@/lib/permissions";

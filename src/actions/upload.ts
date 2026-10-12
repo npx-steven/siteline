@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { PhotoUploadMeta } from "@/lib/photo-metadata";
 
@@ -20,24 +20,22 @@ export async function uploadMediaAction(
     return { error: "User is not authenticated." };
   }
 
-  // Fetch user profile
-  const { data: profile } = await supabase
-    .from("users")
-    .select("full_name")
-    .eq("id", user.id)
-    .single();
+  // Independent lookups, so they share one round trip.
+  const [{ data: profile }, { data: project }] = await Promise.all([
+    supabase.from("users").select("full_name").eq("id", user.id).single(),
+    // projectId arrives from the client. Reading it through RLS confirms the
+    // caller is a member of its company, and gives the company the file is
+    // stored under. The row's own company_id is set by trigger from the project.
+    supabase
+      .from("projects")
+      .select("id, company_id")
+      .eq("id", projectId)
+      .maybeSingle(),
+  ]);
+
   if (!profile) {
     return { error: "User doesnt exit in user table." };
   }
-
-  // projectId arrives from the client. Reading it through RLS confirms the
-  // caller is a member of its company, and gives the company the file is
-  // stored under. The row's own company_id is set by trigger from the project.
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id, company_id")
-    .eq("id", projectId)
-    .maybeSingle();
 
   if (!project) {
     return { error: "Project not found." };

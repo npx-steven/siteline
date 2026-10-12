@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { editAccountSchema } from "@/lib/validators/account";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { getAuthUser } from "./auth";
+import { getAuthUser } from "@/lib/auth";
 
 export async function editAccountAction(
   formData: FormData,
