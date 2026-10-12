@@ -35,7 +35,7 @@ const features = [
 
 function OnboardingWelcomePage() {
   return (
-    <main className="flex flex-col h-dvh px-6 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-dvh px-6 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <Badge className="rounded-full bg-foreground text-background gap-1.5 px-3 py-1 h-auto">
         <IconCheck stroke={2} className="size-3.5" />
         You&apos;re all set
@@ -78,7 +78,7 @@ function OnboardingWelcomePage() {
           <IconArrowRight stroke={2} />
         </Link>
       </Button>
-    </main>
+    </div>
   );
 }
 

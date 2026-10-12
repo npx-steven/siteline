@@ -3,7 +3,7 @@ import { OnboardingProgress } from "@/components/onboarding/onboarding-progress"
 
 function OnboardingCompanyPage() {
   return (
-    <main className="flex flex-col h-dvh px-6 ">
+    <div className="flex flex-col h-dvh px-6 ">
       <div className="py-4" aria-hidden>
         <div className="size-9" />
       </div>
@@ -21,7 +21,7 @@ function OnboardingCompanyPage() {
       <div className="flex flex-1 flex-col w-full pb-[max(1rem,env(safe-area-inset-bottom))]">
         <CreateCompanyForm />
       </div>
-    </main>
+    </div>
   );
 }
 

@@ -39,7 +39,7 @@ function CompanyCard({
   const canInvite = can.manageInvites(role);
 
   return (
-    <main className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl p-4 mt-8">
+    <section className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl p-4 mt-8">
       <div className="flex flex-row items-start justify-between gap-3 ">
         <div className="flex flex-1 flex-row items-center gap-3 min-w-0">
           <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-foreground text-background">
@@ -135,7 +135,7 @@ function CompanyCard({
           </Link>
         </Button>
       </div>
-    </main>
+    </section>
   );
 }
 

@@ -33,7 +33,7 @@ async function OnboardingPendingPage() {
   const closed = declined || expired;
 
   return (
-    <main className="flex flex-col h-dvh px-6 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="flex flex-col h-dvh px-6 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex size-14 items-center justify-center rounded-2xl border border-border bg-card">
         {closed ? (
           <IconX stroke={1.5} className="size-7" />
@@ -88,7 +88,7 @@ async function OnboardingPendingPage() {
       )}
 
       <PendingRequestActions closed={closed} />
-    </main>
+    </div>
   );
 }
 

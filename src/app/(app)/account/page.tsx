@@ -62,11 +62,7 @@ async function AccountPage() {
     requestCount: requests.length,
   };
 
-  return (
-    <main>
-      <AccountShell data={data} />
-    </main>
-  );
+  return <AccountShell data={data} />;
 }
 
 export default AccountPage;

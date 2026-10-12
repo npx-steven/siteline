@@ -21,7 +21,7 @@ function AccountShell({ data }: { data: AccountData }) {
   const openInvite = () => setInviteOpen(true);
 
   return (
-    <main className="px-4 pb-32 h-dvh overflow-y-auto">
+    <div className="px-4 pb-32 h-dvh overflow-y-auto">
       <h1 className="text-3xl font-bold tracking-tight py-6">Account</h1>
       <div>
         <AccountHeader
@@ -64,7 +64,7 @@ function AccountShell({ data }: { data: AccountData }) {
         onOpenChange={setInviteOpen}
         companyName={company.name}
       />
-    </main>
+    </div>
   );
 }
 

@@ -54,7 +54,7 @@ function TeamView({
   }
 
   return (
-    <main className="px-4 pb-32 h-dvh overflow-y-auto">
+    <div className="px-4 pb-32 h-dvh overflow-y-auto">
       <div className="flex flex-row items-center justify-between py-4">
         <Button
           asChild
@@ -132,7 +132,7 @@ function TeamView({
           companyName={companyName}
         />
       )}
-    </main>
+    </div>
   );
 }
 

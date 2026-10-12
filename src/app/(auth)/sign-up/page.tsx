@@ -34,6 +34,14 @@ export default function SignUpPage() {
       </div>
       <div className="flex flex-1 flex-col w-full pb-[max(1rem,env(safe-area-inset-bottom))]">
         <SignUpForm />
+        <div className="flex flex-row items-center justify-center pt-4">
+          <p className="text-xs font-normal text-muted-foreground">
+            Already have an account?
+          </p>
+          <Button asChild size="xs" variant="link" className="px-1">
+            <Link href="/sign-in">Sign In</Link>
+          </Button>
+        </div>
       </div>
     </main>
   );

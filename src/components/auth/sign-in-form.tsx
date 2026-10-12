@@ -32,6 +32,7 @@ function SignInForm({ next }: { next?: string }) {
   });
 
   async function onSubmit(values: SignInFormValues) {
+    setServerError(null);
     setIsLoading(true);
     const formData = new FormData();
     formData.append("email", values.email);

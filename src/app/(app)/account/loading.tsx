@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AccountLoading() {
   return (
-    <main
+    <div
       className="px-4 pb-32 h-dvh overflow-y-auto"
       aria-busy="true"
       aria-live="polite"
@@ -74,6 +74,6 @@ export default function AccountLoading() {
       </div>
 
       <span className="sr-only">Loading account…</span>
-    </main>
+    </div>
   );
 }

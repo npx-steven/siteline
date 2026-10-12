@@ -83,7 +83,7 @@ function CreateCompanyForm() {
         <div className="flex flex-row items-start border border-border gap-2 rounded-xl bg-card p-4">
           <IconShieldCheck stroke={2} size={16} />
           <div className="flex flex-col gap-1 items-start">
-            <h1 className="text-xs font-semibold ">You&apos;ll be the owner</h1>
+            <h2 className="text-xs font-semibold ">You&apos;ll be the owner</h2>
             <p className="text-xs font-normal text-muted-foreground">
               You can invite your crew with a link once you&apos;re in.
             </p>

@@ -19,8 +19,8 @@ function ContactInfo({
   const memberSince = formatMonthYear(new Date(profile.createdAt));
 
   return (
-    <main className="flex flex-col gap-2 mt-8">
-      <h1 className="uppercase text-xs text-muted-foreground">Account</h1>
+    <section className="flex flex-col gap-2 mt-8">
+      <h2 className="uppercase text-xs text-muted-foreground">Account</h2>
       <div className="flex flex-col bg-card border border-muted-foreground/20 rounded-3xl px-4 divide-y divide-muted-foreground/20">
         <Row icon={<IconMail className="size-4" />} label="Email">
           <span className="text-sm text-muted-foreground truncate">
@@ -50,7 +50,7 @@ function ContactInfo({
           <span className="text-sm text-muted-foreground">{memberSince}</span>
         </Row>
       </div>
-    </main>
+    </section>
   );
 }
 

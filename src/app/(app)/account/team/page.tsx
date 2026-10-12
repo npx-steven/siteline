@@ -22,7 +22,7 @@ async function TeamPage({ searchParams }: TeamPageProps) {
   const membership = await getActiveMembership(supabase);
   if (!membership) redirect("/onboarding/company");
 
-  // Every member sees the team; only owners see and act on requests.
+  // Every member sees the team; owners and managers see and act on requests.
   const canManageRequests = can.manageInvites(membership.role);
 
   const [{ data: company }, members, requests] = await Promise.all([
